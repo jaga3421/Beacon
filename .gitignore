@@ -1,0 +1,34 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Build outputs
+build/
+app/build/
+
+# Gradle files
+.gradle/
+local.properties
+
+# Android Studio
+*.iml
+.idea/
+*.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Claude / AI tooling
+.claude-flow/
+CLAUDE.md
+
+# Keystore files — never commit these
+*.jks
+*.keystore
+
+# Agent / tooling databases
+*.rvf
+*.rvf.lock
+ruvector.db
