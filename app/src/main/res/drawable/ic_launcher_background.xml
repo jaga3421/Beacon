@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Light-mode adaptive icon background — very light blue-tinted white -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/beacon_bg" />
+    <solid android:color="#EEF2FF" />
 </shape>

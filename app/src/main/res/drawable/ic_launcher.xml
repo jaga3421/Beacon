@@ -1,24 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Beacon flat launcher icon — used on devices below API 26 (no adaptive icon support).
+    Same WiFi Meter glyph on the app's dark background.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Dark background fill -->
     <path
         android:fillColor="#0A0B0E"
-        android:pathData="M0,0h108v108h-108z" />
+        android:pathData="M0,0 h108 v108 h-108 Z" />
+
+    <!-- Outer WiFi arc -->
     <path
-        android:strokeColor="#2F6BFF"
-        android:strokeWidth="5"
-        android:strokeLineCap="round"
+        android:pathData="M 18,55 A 40,40 0 0 1 90,55"
         android:fillColor="#00000000"
-        android:pathData="M36,58 a18,18 0 0 1 36,0" />
+        android:strokeColor="#5B8CFF"
+        android:strokeWidth="5.5"
+        android:strokeLineCap="round" />
+
+    <!-- Middle WiFi arc -->
     <path
-        android:strokeColor="#3FE0D0"
-        android:strokeWidth="5"
-        android:strokeLineCap="round"
+        android:pathData="M 29,60 A 28,28 0 0 1 79,60"
         android:fillColor="#00000000"
-        android:pathData="M28,50 a26,26 0 0 1 52,0" />
+        android:strokeColor="#5B8CFF"
+        android:strokeWidth="5.5"
+        android:strokeLineCap="round" />
+
+    <!-- Inner WiFi arc -->
     <path
-        android:fillColor="#3FE0D0"
-        android:pathData="M54,64 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+        android:pathData="M 40,65 A 16,16 0 0 1 68,65"
+        android:fillColor="#00000000"
+        android:strokeColor="#5B8CFF"
+        android:strokeWidth="5.5"
+        android:strokeLineCap="round" />
+
+    <!-- Meter needle -->
+    <path
+        android:pathData="M 54,72 L 78,48"
+        android:fillColor="#00000000"
+        android:strokeColor="#5B8CFF"
+        android:strokeWidth="5.5"
+        android:strokeLineCap="round" />
+
+    <!-- Pivot dot -->
+    <path
+        android:pathData="M 54,72 m -4.5,0 a 4.5,4.5 0 1,0 9,0 a 4.5,4.5 0 1,0 -9,0"
+        android:fillColor="#5B8CFF" />
+
 </vector>
