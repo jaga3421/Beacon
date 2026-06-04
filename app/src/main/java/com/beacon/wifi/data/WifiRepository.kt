@@ -130,7 +130,9 @@ class WifiRepository(private val appContext: Context) {
     @Suppress("DEPRECATION")
     private fun readConnected(): ConnectedInfo? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            readConnectedModern()
+            // Try modern API first; fall back to legacy if it returns null
+            // (handles cases where ConnectivityManager returns null but WifiManager still has data)
+            readConnectedModern() ?: readConnectedLegacy()
         } else {
             readConnectedLegacy()
         }
@@ -143,13 +145,52 @@ class WifiRepository(private val appContext: Context) {
         val caps = cm.getNetworkCapabilities(network) ?: return null
         if (!caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return null
         val wifiInfo = caps.transportInfo as? WifiInfo ?: return null
-        val ssid = wifiInfo.ssid?.removePrefix("\"")?.removeSuffix("\"")
-        if (ssid.isNullOrBlank() || ssid == "<unknown ssid>") return null
+
+        val rssi = wifiInfo.rssi
         val freq = wifiInfo.frequency
+
+        // Validate signal: not genuinely connected if RSSI/frequency look invalid
+        if (rssi == 0 || rssi < -120 || freq <= 0) return null
+
+        var ssid = wifiInfo.ssid?.removePrefix("\"")?.removeSuffix("\"")
+
+        // SSID may be redacted to "<unknown ssid>" when neverForLocation flag is set on
+        // NEARBY_WIFI_DEVICES, or when the device's location mode is off. Try fallbacks.
+        if (ssid.isNullOrBlank() || ssid == "<unknown ssid>") {
+            // Fallback 1: legacy WifiManager.connectionInfo (deprecated but still works on most devices)
+            ssid = runCatching {
+                @Suppress("DEPRECATION")
+                wifi?.connectionInfo?.ssid
+                    ?.removePrefix("\"")?.removeSuffix("\"")
+                    ?.takeIf { it.isNotBlank() && it != "<unknown ssid>" }
+            }.getOrNull()
+        }
+
+        if (ssid.isNullOrBlank() || ssid == "<unknown ssid>") {
+            // Fallback 2: look up SSID from cached scan results via BSSID
+            val bssid = wifiInfo.bssid
+            if (!bssid.isNullOrBlank() && bssid != "02:00:00:00:00:00") {
+                ssid = runCatching {
+                    @Suppress("MissingPermission")
+                    wifi?.scanResults
+                        ?.firstOrNull { it.BSSID == bssid }
+                        ?.SSID
+                        ?.removePrefix("\"")?.removeSuffix("\"")
+                        ?.takeIf { it.isNotBlank() && it != "<unknown ssid>" }
+                }.getOrNull()
+            }
+        }
+
+        if (ssid.isNullOrBlank() || ssid == "<unknown ssid>") {
+            // Fallback 3: RSSI is valid so device is connected — show placeholder rather than
+            // falsely reporting "not connected". The legacy path may fill in the real SSID.
+            ssid = if (rssi in -100..-10) "(connected)" else return null
+        }
+
         val channel = channelFor(freq)
         return ConnectedInfo(
-            ssid = ssid,
-            rssi = wifiInfo.rssi,
+            ssid = ssid ?: return null,
+            rssi = rssi,
             frequencyMhz = freq,
             channel = channel,
             linkSpeedMbps = wifiInfo.linkSpeed,
@@ -161,13 +202,17 @@ class WifiRepository(private val appContext: Context) {
     private fun readConnectedLegacy(): ConnectedInfo? {
         val info = wifi?.connectionInfo ?: return null
         if (info.networkId == -1) return null
-        val ssid = info.ssid?.removePrefix("\"")?.removeSuffix("\"")
-        if (ssid.isNullOrBlank() || ssid == "<unknown ssid>") return null
+        val rssi = info.rssi
         val freq = info.frequency
+        // Validate signal fields
+        if (rssi == 0 || rssi < -120 || freq <= 0) return null
+        val ssid = info.ssid?.removePrefix("\"")?.removeSuffix("\"")
+            ?.takeIf { it.isNotBlank() && it != "<unknown ssid>" }
+            ?: if (rssi in -100..-10) "(connected)" else return null
         val channel = channelFor(freq)
         return ConnectedInfo(
             ssid = ssid,
-            rssi = info.rssi,
+            rssi = rssi,
             frequencyMhz = freq,
             channel = channel,
             linkSpeedMbps = info.linkSpeed,

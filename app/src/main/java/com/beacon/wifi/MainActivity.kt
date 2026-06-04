@@ -348,10 +348,14 @@ private fun BeaconBottomBar(
                         nav.navigate(tab.route) {
                             popUpTo(Routes.DASHBOARD) {
                                 saveState = true
-                                inclusive = false
+                                // When navigating TO Dashboard, pop it too so we always
+                                // get a fresh entry (avoids launchSingleTop no-op when
+                                // Dashboard is already at the top after returning from
+                                // AdvancedScreen or other non-tab destinations).
+                                inclusive = tab.route == Routes.DASHBOARD
                             }
                             launchSingleTop = true
-                            restoreState = true
+                            restoreState = tab.route != Routes.DASHBOARD
                         }
                     }
                 },
