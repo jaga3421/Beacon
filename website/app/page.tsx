@@ -47,14 +47,23 @@ function FeatureCard({
   emoji,
   title,
   body,
+  badge,
 }: {
   emoji: string;
   title: string;
   body: string;
+  badge?: string;
 }) {
   return (
     <div className="rounded-2xl bg-[#0f1117] border border-white/[0.06] p-6 flex flex-col gap-3">
-      <span className="text-3xl" role="img" aria-label={title}>{emoji}</span>
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-3xl" role="img" aria-label={title}>{emoji}</span>
+        {badge && (
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-[#5B8CFF] border border-[#5B8CFF]/30 rounded-full px-2 py-0.5 whitespace-nowrap">
+            {badge}
+          </span>
+        )}
+      </div>
       <h3 className="font-semibold text-lg text-white">{title}</h3>
       <p className="text-[#71717a] text-sm leading-relaxed">{body}</p>
     </div>
@@ -100,7 +109,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-lg text-[#a1a1aa] max-w-md mx-auto mb-10 leading-relaxed">
-            Beacon shows signal strength, channel congestion, dead zones, and smart fixes —
+            Beacon shows signal strength, channel congestion, and smart fixes
             in real time, with <strong className="text-white font-semibold">zero ads</strong> and{" "}
             <strong className="text-white font-semibold">no paywall</strong>.
           </p>
@@ -131,7 +140,7 @@ export default function HomePage() {
             </a>
           </div>
 
-          <p className="mt-6 text-xs text-[#52525b]">Android 7.0+ · ~16 MB · No account required</p>
+          <p className="mt-6 text-xs text-[#52525b]">Android 7.0+ · ~16 MB · Sideload APK · Play Store coming soon</p>
         </div>
 
         {/* Scroll hint */}
@@ -162,25 +171,38 @@ export default function HomePage() {
           </p>
 
           <h2 className="text-4xl sm:text-5xl font-bold leading-[1.15] mb-10 text-white">
-            I was in Yercaud.<br />
-            Looking for a good WiFi spot.
+            My home is in{" "}
+            <a
+              href="https://en.wikipedia.org/wiki/Yercaud"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#5B8CFF] underline underline-offset-4 decoration-[#5B8CFF]/40 hover:decoration-[#5B8CFF] transition-colors"
+            >
+              Yercaud
+            </a>
+            .<br />
+            The WiFi is weak. The hills are not.
           </h2>
 
           <div className="space-y-6 text-[#a1a1aa] text-lg leading-relaxed">
             <p>
-              Every app in the Play Store was the same. Open it up, and you're hit with a{" "}
-              <span className="text-white font-medium">full-screen ad</span>. Dismiss the ad,
-              and the signal bar is blurred — "upgrade to see real values". Tap upgrade, and
-              it's ₹500 a year for what should be a simple number.
+              Yercaud is a hill station in Tamil Nadu. Beautiful place to live and work from, but
+              the hilly terrain means{" "}
+              <span className="text-white font-medium">weak, patchy WiFi connections</span>. I
+              kept moving my desk around trying to find the spot where the signal was actually
+              usable. Same problem at coffee shops in Chennai, some of them have great WiFi,
+              some are terrible.
             </p>
             <p>
-              I just wanted to know{" "}
-              <strong className="text-white font-semibold">which channel was least crowded</strong>{" "}
-              so I could sit somewhere that actually worked. That's it.
+              I downloaded a few free WiFi analysers to check signal strength and find the best
+              spot to sit. They all worked, sort of. But{" "}
+              <strong className="text-white font-semibold">every single one</strong> hit me with
+              a full-screen ad on open, blurred the signal readings behind a paywall, or both.
+              Just to see a number.
             </p>
             <p>
-              So I built Beacon over a weekend. It shows everything — signal strength, frequency,
-              channel overlap, co-channel neighbours, dead zones — with no ads and no paywall.
+              So I built Beacon over a weekend. Signal strength, channel info, smart
+              recommendations, all of it free and up front. No ads, no paywall, no account.
               It always will be.
             </p>
           </div>
@@ -188,7 +210,7 @@ export default function HomePage() {
           {/* Pull quote */}
           <blockquote className="mt-12 border-l-2 border-[#5B8CFF] pl-6">
             <p className="text-2xl font-semibold text-white leading-snug">
-              "The data is yours. You shouldn't have to pay to see it."
+              "The signal data is yours. You should not have to pay to see it."
             </p>
           </blockquote>
 
@@ -198,7 +220,16 @@ export default function HomePage() {
               <path d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7Z"/>
               <circle cx="12" cy="9" r="2.5"/>
             </svg>
-            Born in Yercaud, Tamil Nadu · shipped from Bangalore
+            Born in{" "}
+            <a
+              href="https://en.wikipedia.org/wiki/Yercaud"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#5B8CFF] hover:underline"
+            >
+              Yercaud
+            </a>
+            , Tamil Nadu · shipped from Chennai
           </div>
         </div>
       </section>
@@ -229,22 +260,23 @@ export default function HomePage() {
             <FeatureCard
               emoji="📡"
               title="Live signal scan"
-              body="RSSI, frequency, channel, link speed, and band — updated every 1.5 seconds. See the full picture of every network around you, not just your own."
+              body="RSSI, frequency, channel, link speed, and band updated every 1.5 seconds. See the full picture of every network around you, not just your own."
             />
             <FeatureCard
               emoji="🗺️"
               title="Dead zone heatmap"
-              body="Walk around your space and watch the signal heatmap build in real time. Find the exact corner where it drops — then fix it."
+              body="Walk around your space and watch a signal heatmap build in real time. Find the exact corner where it drops, then fix it."
+              badge="Coming soon"
             />
             <FeatureCard
               emoji="🔧"
               title="Smart recommendations"
-              body="Beacon analyses your channel neighbours and gives you specific actions: switch to channel 11, move the router, or change your band. Not generic tips — your actual situation."
+              body="Beacon analyses your channel neighbours and gives you specific actions: switch to channel 11, move the router, or change your band. Specific to your situation, not generic tips."
             />
             <FeatureCard
               emoji="🚫"
               title="Zero ads. Zero paywall."
-              body="No banners, no interstitials, no blurred values behind a subscription. Download it, use it, that's it. It's open source — you can read every line."
+              body="No banners, no interstitials, no blurred values behind a subscription. Download it, use it, that is it. Open source, you can read every line."
             />
           </div>
 
@@ -261,8 +293,8 @@ export default function HomePage() {
               Give it a try.
             </h2>
             <p className="relative z-10 text-[#71717a] mb-8 max-w-sm leading-relaxed">
-              Sideload the APK, scan your networks, and tell me what you think.
-              It takes 30 seconds.
+              Sideload the APK on your Android phone, scan your networks, and tell me what you
+              think. It takes about 30 seconds to install.
             </p>
 
             <a
@@ -271,11 +303,14 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className="relative z-10 inline-flex items-center gap-3 rounded-2xl bg-[#5B8CFF] hover:bg-[#4a7aee] active:scale-95 transition-all px-8 py-4 font-semibold text-black text-base shadow-[0_0_40px_rgba(91,140,255,0.25)]"
             >
-              Download Beacon — it&apos;s free
+              Download APK (free, sideload)
             </a>
 
-            <p className="relative z-10 mt-5 text-xs text-[#52525b]">
-              Android 7.0 · ~16 MB · No account, no tracking, no nonsense
+            <p className="relative z-10 mt-4 text-xs text-[#52525b]">
+              Android 7.0+ · ~16 MB · No account, no tracking
+            </p>
+            <p className="relative z-10 mt-2 text-xs text-[#52525b]">
+              Play Store listing coming soon
             </p>
           </div>
         </div>
