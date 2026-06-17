@@ -56,6 +56,16 @@ jobs:
           sed -i "s/versionCode = ${{ steps.ver.outputs.cur_code }}/versionCode = ${{ steps.ver.outputs.new_code }}/" app/build.gradle.kts
           sed -i "s/versionName = \"${{ steps.ver.outputs.cur_name }}\"/versionName = \"${{ steps.ver.outputs.new_name }}\"/" app/build.gradle.kts
 
+      # ── Sync website version.json ──────────────────────────────────────────
+      - name: Sync website version
+        run: |
+          cat > website/version.json << 'VEOF'
+          {
+            "version": "${{ steps.ver.outputs.new_name }}",
+            "apkUrl": "https://github.com/jaga3421/Beacon/releases/download/v${{ steps.ver.outputs.new_name }}/Beacon-v${{ steps.ver.outputs.new_name }}.apk"
+          }
+          VEOF
+
       # ── Build ──────────────────────────────────────────────────────────────
       - name: Make gradlew executable
         run: chmod +x gradlew
@@ -74,7 +84,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app/build.gradle.kts
+          git add app/build.gradle.kts website/version.json
           git commit -m "ci: bump version to ${{ steps.ver.outputs.new_name }} [skip ci]"
           git push
 

@@ -1,342 +1,643 @@
-import Link from "next/link";
+"use client";
 
-const DOWNLOAD_URL = "https://github.com/jaga3421/Beacon/releases/latest";
+import { useRef, useEffect, useState } from "react";
+import versionData from "../version.json";
 
-/* ─── WiFi Meter SVG icon ────────────────────────────────────────────────── */
-function WifiMeterIcon({ size = 80, className = "" }: { size?: number; className?: string }) {
-  const cx = 54, cy = 72;
+const VERSION    = versionData.version;
+const APK_URL    = versionData.apkUrl;
+const GITHUB_URL = "https://github.com/jaga3421/Beacon";
+
+/* ─── helpers ──────────────────────────────────────────────────────────────── */
+type Device = "android" | "ios" | "desktop" | "init";
+const ACCENT = { r: 59, g: 130, b: 246 }; // #3B82F6
+const TWO    = Math.PI * 2;
+const rgba   = (r: number, g: number, b: number, a: number) => `rgba(${r},${g},${b},${a})`;
+const acc    = (a: number) => rgba(ACCENT.r, ACCENT.g, ACCENT.b, a);
+const rand   = (a: number, b: number) => a + Math.random() * (b - a);
+const mod    = (a: number) => ((a % TWO) + TWO) % TWO;
+
+function setupCanvas(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext("2d")!;
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const box = { W: 0, H: 0 };
+  const resize = () => {
+    const r  = canvas.getBoundingClientRect();
+    box.W = r.width; box.H = r.height;
+    canvas.width  = Math.round(box.W * DPR);
+    canvas.height = Math.round(box.H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  };
+  const ro = new ResizeObserver(resize);
+  ro.observe(canvas); resize();
+  return { ctx, box, ro };
+}
+
+/* ─── canvas: hero radar ────────────────────────────────────────────────────── */
+function HeroCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current; if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    let W = 0, H = 0, cx = 0, cy = 0, maxR = 0;
+    let nodes: { ang:number; rad:number; x:number; y:number; size:number; base:number; lit:number; big:boolean; label:string }[] = [];
+    let pings: { r:number }[] = [], sweep = 0, lastPing = -1e9, last = performance.now(), raf = 0;
+
+    const buildNodes = () => {
+      nodes = [];
+      for (let i = 0; i < 20; i++) {
+        const ang = rand(0, TWO), rad = rand(maxR * 0.16, maxR * 0.92);
+        nodes.push({ ang, rad, x: cx + Math.cos(ang) * rad, y: cy + Math.sin(ang) * rad,
+          size: rand(1.3, 3), base: rand(0.12, 0.32), lit: 0, big: Math.random() < 0.4,
+          label: "-" + Math.round(rand(38, 86)) });
+      }
+    };
+
+    const resize = () => {
+      const r = canvas.getBoundingClientRect();
+      W = r.width; H = r.height;
+      canvas.width  = Math.round(W * DPR);
+      canvas.height = Math.round(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      cx = W * (W > 820 ? 0.66 : 0.5);
+      cy = H * (W > 820 ? 0.46 : 0.40);
+      maxR = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) * 1.02;
+      buildNodes();
+    };
+    const ro = new ResizeObserver(resize); ro.observe(canvas); resize();
+    const hasConic = typeof (ctx as any).createConicGradient === "function";
+
+    const frame = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.05); last = now;
+      ctx.clearRect(0, 0, W, H);
+
+      const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR);
+      bg.addColorStop(0, acc(0.06)); bg.addColorStop(0.5, acc(0.02)); bg.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+      ctx.lineWidth = 1;
+      for (let i = 1; i <= 5; i++) { ctx.beginPath(); ctx.arc(cx, cy, maxR * i / 5.4, 0, TWO); ctx.strokeStyle = acc(0.05); ctx.stroke(); }
+
+      if (now - lastPing > 1950) { pings.push({ r: maxR * 0.04 }); lastPing = now; }
+      ctx.lineWidth = 1.5;
+      pings = pings.filter(p => p.r < maxR);
+      pings.forEach(p => { p.r += dt * maxR * 0.19; const a = Math.max(0, 1 - p.r / maxR); ctx.beginPath(); ctx.arc(cx, cy, p.r, 0, TWO); ctx.strokeStyle = acc(a * 0.5); ctx.stroke(); });
+
+      sweep = mod(sweep + dt * 0.52);
+      if (hasConic) {
+        const g = (ctx as any).createConicGradient(sweep, cx, cy);
+        g.addColorStop(0, acc(0)); g.addColorStop(0.74, acc(0)); g.addColorStop(0.92, acc(0.05)); g.addColorStop(0.995, acc(0.24)); g.addColorStop(1, acc(0));
+        ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, maxR, 0, TWO); ctx.clip(); ctx.fillStyle = g; ctx.fillRect(cx - maxR, cy - maxR, maxR * 2, maxR * 2); ctx.restore();
+      }
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(sweep); ctx.strokeStyle = acc(0.45); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(maxR, 0); ctx.stroke(); ctx.restore();
+
+      ctx.font = "500 10px var(--font-mono,'IBM Plex Mono',monospace)";
+      nodes.forEach(n => {
+        const diff = mod(sweep - n.ang);
+        if (diff < 0.16) n.lit = 1;
+        n.lit *= 0.965;
+        if (n.lit > 0.12) { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(n.x, n.y); ctx.strokeStyle = acc(n.lit * 0.22); ctx.lineWidth = 1; ctx.stroke(); }
+        const a = Math.min(1, n.base + n.lit * 0.8);
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.size + n.lit * 1.4, 0, TWO);
+        ctx.fillStyle = acc(a); ctx.shadowColor = acc(n.lit * 0.8); ctx.shadowBlur = n.lit * 12; ctx.fill(); ctx.shadowBlur = 0;
+        if (n.big && n.lit > 0.45) { ctx.fillStyle = acc(n.lit * 0.85); ctx.fillText(n.label, n.x + 7, n.y + 3); }
+      });
+
+      const pulse = 0.5 + 0.5 * Math.sin(now / 560);
+      ctx.beginPath(); ctx.arc(cx, cy, 16 + pulse * 5, 0, TWO); ctx.fillStyle = acc(0.10); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx, cy, 4.5 + pulse * 1.6, 0, TWO);
+      ctx.fillStyle = acc(0.95); ctx.shadowColor = acc(0.9); ctx.shadowBlur = 22; ctx.fill(); ctx.shadowBlur = 0;
+
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, []);
+  return <canvas ref={ref} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 0 }} />;
+}
+
+/* ─── canvas: scan waveform ─────────────────────────────────────────────────── */
+function ScanCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current; if (!canvas) return;
+    const { ctx, box, ro } = setupCanvas(canvas);
+    const N = 90, data = new Array(N).fill(0.5);
+    let phase = 0, last = performance.now(), raf = 0;
+    const frame = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.05); last = now;
+      const { W, H } = box;
+      phase += dt * 1.6;
+      data.shift();
+      const v = 0.5 + 0.26 * Math.sin(phase) + 0.12 * Math.sin(phase * 2.7) + 0.06 * (Math.random() - 0.5);
+      data.push(Math.max(0.08, Math.min(0.92, v)));
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = acc(0.06); ctx.lineWidth = 1;
+      for (let i = 1; i < 4; i++) { const y = H * i / 4; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+      const pad = 14, gw = W - pad * 2;
+      const xAt = (i: number) => pad + gw * i / (N - 1);
+      const yAt = (val: number) => H - 16 - val * (H - 32);
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, acc(0.28)); grad.addColorStop(1, acc(0));
+      ctx.beginPath(); ctx.moveTo(xAt(0), H);
+      for (let i = 0; i < N; i++) ctx.lineTo(xAt(i), yAt(data[i]));
+      ctx.lineTo(xAt(N - 1), H); ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+      ctx.beginPath();
+      for (let i = 0; i < N; i++) { const x = xAt(i), y = yAt(data[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.strokeStyle = acc(0.95); ctx.lineWidth = 2; ctx.shadowColor = acc(0.7); ctx.shadowBlur = 8; ctx.stroke(); ctx.shadowBlur = 0;
+      const lx = xAt(N - 1), ly = yAt(data[N - 1]);
+      ctx.beginPath(); ctx.arc(lx, ly, 3.5, 0, TWO); ctx.fillStyle = "#fff"; ctx.shadowColor = acc(1); ctx.shadowBlur = 12; ctx.fill(); ctx.shadowBlur = 0;
+      const dbm = Math.round(-30 - (1 - data[N - 1]) * 60);
+      ctx.font = "500 12px var(--font-mono,'IBM Plex Mono',monospace)"; ctx.fillStyle = acc(0.9); ctx.textAlign = "left";
+      ctx.fillText(dbm + " dBm", pad, 20);
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, []);
+  return <canvas ref={ref} style={{ display: "block", width: "100%", height: "140px" }} />;
+}
+
+/* ─── canvas: heatmap ───────────────────────────────────────────────────────── */
+function HeatCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current; if (!canvas) return;
+    const { ctx, box, ro } = setupCanvas(canvas);
+    const cols = 16, rows = 7, gap = 2;
+    let raf = 0;
+    const frame = (now: number) => {
+      const t = now / 1000, { W, H } = box;
+      ctx.clearRect(0, 0, W, H);
+      const rx = (0.5 + 0.34 * Math.sin(t * 0.5)) * W;
+      const ry = (0.5 + 0.34 * Math.cos(t * 0.37)) * H;
+      const cw = (W - gap * (cols - 1)) / cols, ch = (H - gap * (rows - 1)) / rows;
+      const maxD = Math.hypot(W, H) * 0.62;
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          const x = i * (cw + gap), y = j * (ch + gap);
+          const d = Math.hypot((x + cw / 2) - rx, (y + ch / 2) - ry);
+          let v = 1 - d / maxD;
+          v += 0.06 * Math.sin(t * 1.3 + i * 0.6 + j * 0.9);
+          v = Math.max(0, Math.min(1, v));
+          let r2, g2, b2;
+          if (v > 0.5) { const k = (v - 0.5) * 2; r2 = Math.round(ACCENT.r * k); g2 = Math.round(ACCENT.g * (0.55 + 0.45 * k)); b2 = Math.round(ACCENT.b * (0.5 + 0.5 * k)); }
+          else { const k = v * 2; r2 = Math.round(150 * (1 - k) + ACCENT.r * k * 0.3); g2 = Math.round(40 * (1 - k) + ACCENT.g * k * 0.4); b2 = Math.round(50 * (1 - k) + ACCENT.b * k * 0.4); }
+          ctx.fillStyle = `rgba(${r2},${g2},${b2},${0.18 + v * 0.7})`; ctx.fillRect(x, y, cw, ch);
+        }
+      }
+      ctx.beginPath(); ctx.arc(rx, ry, 4, 0, TWO);
+      ctx.fillStyle = "#fff"; ctx.shadowColor = acc(1); ctx.shadowBlur = 14; ctx.fill(); ctx.shadowBlur = 0;
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, []);
+  return <canvas ref={ref} style={{ display: "block", width: "100%", height: "140px" }} />;
+}
+
+/* ─── canvas: channel recommendations ──────────────────────────────────────── */
+function RecoCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current; if (!canvas) return;
+    const { ctx, box, ro } = setupCanvas(canvas);
+    const nets = [{ c:0.16,w:0.10 },{ c:0.24,w:0.12 },{ c:0.31,w:0.09 },{ c:0.40,w:0.11 },{ c:0.20,w:0.08 },{ c:0.50,w:0.10 }];
+    const pick = 0.82, pickW = 0.085;
+    let t = 0, last = performance.now(), raf = 0;
+    const frame = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.05); last = now; t += dt;
+      const { W, H } = box;
+      const base = H - 22, pad = 14, gw = W - pad * 2;
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = acc(0.10); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pad, base); ctx.lineTo(W - pad, base); ctx.stroke();
+      const bell = (cx: number, wid: number, amp: number, fill: string, line: string) => {
+        ctx.beginPath();
+        for (let x = 0; x <= gw; x += 4) { const xn = x / gw, y = base - amp * Math.exp(-Math.pow((xn - cx) / wid, 2)); const px = pad + x; x ? ctx.lineTo(px, y) : ctx.moveTo(px, y); }
+        ctx.lineTo(W - pad, base); ctx.lineTo(pad, base); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = line; ctx.lineWidth = 1.4; ctx.stroke();
+      };
+      nets.forEach((n, i) => { const amp = (H - 46) * (0.5 + 0.12 * Math.sin(t * 1.3 + i)); bell(n.c, n.w, amp, "rgba(230,120,70,0.10)", "rgba(230,140,90,0.32)"); });
+      const pulse = 0.6 + 0.4 * Math.sin(t * 2.4), amp = (H - 46) * 0.72;
+      bell(pick, pickW, amp, acc(0.16 + 0.10 * pulse), acc(0.55 + 0.35 * pulse));
+      const mx = pad + gw * pick;
+      ctx.strokeStyle = acc(0.5); ctx.setLineDash([3, 3]); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(mx, base); ctx.lineTo(mx, base - amp - 4); ctx.stroke(); ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(mx, base - amp - 8, 3.2 + pulse * 1.2, 0, TWO); ctx.fillStyle = "#fff"; ctx.shadowColor = acc(1); ctx.shadowBlur = 12; ctx.fill(); ctx.shadowBlur = 0;
+      ctx.font = "600 12px var(--font-mono,'IBM Plex Mono',monospace)"; ctx.fillStyle = acc(0.95); ctx.textAlign = "right"; ctx.fillText("USE CH 11", W - pad, 20);
+      ctx.font = "500 11px var(--font-mono,'IBM Plex Mono',monospace)"; ctx.fillStyle = "rgba(230,140,90,0.7)"; ctx.textAlign = "left"; ctx.fillText("crowded", pad, 20);
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, []);
+  return <canvas ref={ref} style={{ display: "block", width: "100%", height: "140px" }} />;
+}
+
+/* ─── canvas: free reveal ───────────────────────────────────────────────────── */
+function FreeCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current; if (!canvas) return;
+    const { ctx, box, ro } = setupCanvas(canvas);
+    let t = 0, last = performance.now(), raf = 0;
+    const CYCLE = 4.2;
+    const frame = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.05); last = now; t += dt;
+      const { W, H } = box, cx2 = W / 2, cy2 = H / 2 + 4, p = (t % CYCLE) / CYCLE;
+      ctx.clearRect(0, 0, W, H);
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      const bg = ctx.createRadialGradient(cx2, cy2, 0, cx2, cy2, W * 0.5);
+      bg.addColorStop(0, acc(0.05)); bg.addColorStop(1, acc(0)); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      const priceAlpha = p < 0.55 ? 1 : Math.max(0, 1 - (p - 0.55) / 0.12);
+      const strike = p > 0.42 ? Math.min(1, (p - 0.42) / 0.16) : 0;
+      const freeIn = p > 0.6  ? Math.min(1, (p - 0.6)  / 0.16) : 0;
+      if (priceAlpha > 0) {
+        ctx.font = "600 30px var(--font-space,'Space Grotesk',sans-serif)"; ctx.fillStyle = `rgba(150,160,165,${0.85 * priceAlpha})`; ctx.fillText("₹500 / yr", cx2, cy2);
+        const tw = ctx.measureText("₹500 / yr").width;
+        if (strike > 0) { ctx.strokeStyle = `rgba(235,90,80,.95)`; ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(cx2 - tw / 2 - 6, cy2); ctx.lineTo(cx2 - tw / 2 - 6 + (tw + 12) * strike, cy2); ctx.stroke(); }
+      }
+      if (freeIn > 0) {
+        const s = 0.8 + 0.2 * freeIn;
+        ctx.save(); ctx.translate(cx2, cy2); ctx.scale(s, s);
+        ctx.font = "700 32px var(--font-space,'Space Grotesk',sans-serif)"; ctx.fillStyle = acc(0.98 * freeIn); ctx.shadowColor = acc(0.7 * freeIn); ctx.shadowBlur = 18;
+        ctx.fillText("FREE. FOREVER.", 0, 0); ctx.shadowBlur = 0; ctx.restore();
+      }
+      ctx.font = "500 11px var(--font-mono,'IBM Plex Mono',monospace)"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = acc(0.55); ctx.fillText("NO ADS · NO LOGIN", 14, 22);
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, []);
+  return <canvas ref={ref} style={{ display: "block", width: "100%", height: "140px" }} />;
+}
+
+/* ─── scroll reveal ─────────────────────────────────────────────────────────── */
+function useReveal() {
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    const reveal = (el: HTMLElement) => {
+      if (el.dataset.revealed === "1") return;
+      el.dataset.revealed = "1";
+      const d = parseFloat(el.dataset.revealDelay || "0");
+      el.animate([{ opacity: 0, transform: "translateY(30px)" }, { opacity: 1, transform: "translateY(0)" }],
+        { duration: 850, delay: d, easing: "cubic-bezier(.2,.7,.2,1)", fill: "forwards" });
+    };
+    let ticking = false;
+    const sweep = () => {
+      ticking = false;
+      const vh = window.innerHeight;
+      els.forEach(el => { if (el.dataset.revealed !== "1") { const r = el.getBoundingClientRect(); if (r.top < vh * 0.92 && r.bottom > 0) reveal(el); } });
+    };
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(sweep); } };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    requestAnimationFrame(sweep); setTimeout(sweep, 120);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
+  }, []);
+}
+
+/* ─── download button with platform detection ───────────────────────────────── */
+function DownloadButton({ label, style, className }: { label: string; style?: React.CSSProperties; className?: string }) {
+  const [device, setDevice]       = useState<Device>("init");
+  const [showModal, setShowModal] = useState(false);
+  const [showIos, setShowIos]     = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    if (/android/i.test(ua)) setDevice("android");
+    else if (/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream) setDevice("ios");
+    else setDevice("desktop");
+  }, []);
+
+  const handleClick = () => {
+    if (device === "android") { window.location.href = APK_URL; }
+    else if (device === "ios") { setShowIos(true); }
+    else { setShowModal(true); }
+  };
+
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 108 108"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      {/* outer arc */}
-      <path d="M 18,55 A 40,40 0 0 1 90,55" stroke="#5B8CFF" strokeWidth="5.5" strokeLinecap="round" />
-      {/* middle arc */}
-      <path d="M 29,60 A 28,28 0 0 1 79,60" stroke="#5B8CFF" strokeWidth="5.5" strokeLinecap="round" />
-      {/* inner arc */}
-      <path d="M 40,65 A 16,16 0 0 1 68,65" stroke="#5B8CFF" strokeWidth="5.5" strokeLinecap="round" />
-      {/* needle */}
-      <path d="M 54,72 L 78,48" stroke="#22d3ee" strokeWidth="5.5" strokeLinecap="round" />
-      {/* pivot dot */}
-      <circle cx={cx} cy={cy} r="4.5" fill="#5B8CFF" />
-    </svg>
+    <>
+      <button onClick={handleClick} style={style} className={className}>{label}</button>
+      {showModal && <QrModal onClose={() => setShowModal(false)} />}
+      {showIos   && <IosModal onClose={() => setShowIos(false)} />}
+    </>
   );
 }
 
-/* ─── Animated radar rings ───────────────────────────────────────────────── */
-function RadarPulse() {
+/* ─── QR modal (desktop) ────────────────────────────────────────────────────── */
+function QrModal({ onClose }: { onClose: () => void }) {
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(APK_URL)}&color=e9f3f0&bgcolor=0e171c&margin=12&format=svg`;
   return (
-    <div className="relative flex items-center justify-center w-48 h-48 mx-auto mb-10">
-      <span className="absolute inset-0 rounded-full border border-[#5B8CFF]/30 pulse-ring" />
-      <span className="absolute inset-0 rounded-full border border-[#5B8CFF]/20 pulse-ring-2" />
-      <span className="absolute inset-0 rounded-full border border-[#5B8CFF]/10 pulse-ring-3" />
-      <div className="relative z-10 bg-[#0f1117] rounded-full p-6 ring-1 ring-[#5B8CFF]/20">
-        <WifiMeterIcon size={80} />
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(5,8,10,.85)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "20px", padding: "36px", maxWidth: "340px", width: "100%", textAlign: "center", boxShadow: `0 0 80px rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},.15)` }}>
+        <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "11px", letterSpacing: ".16em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "20px" }}>Scan to download APK</div>
+        <div style={{ background: "#0e171c", borderRadius: "12px", padding: "16px", display: "inline-block" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={qrSrc} alt="QR code to download Beacon APK" width={176} height={176} style={{ display: "block" }} />
+        </div>
+        <p style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "14px", color: "var(--muted)", margin: "18px 0 0", lineHeight: 1.5 }}>
+          Scan with your Android phone to download Beacon v{VERSION} directly.
+        </p>
+        <p style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "11px", color: "var(--muted)", marginTop: "8px" }}>
+          Android 7.0+ · ~16 MB · No account
+        </p>
+        <button onClick={onClose} style={{ marginTop: "22px", fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "12px", letterSpacing: ".06em", color: "var(--muted)", background: "none", border: "1px solid var(--line)", borderRadius: "8px", padding: "8px 20px", cursor: "pointer", transition: "color .2s,border-color .2s" }}
+          onMouseEnter={e => { (e.target as HTMLButtonElement).style.color = "var(--text)"; (e.target as HTMLButtonElement).style.borderColor = "rgba(255,255,255,.22)"; }}
+          onMouseLeave={e => { (e.target as HTMLButtonElement).style.color = "var(--muted)"; (e.target as HTMLButtonElement).style.borderColor = "var(--line)"; }}>
+          Close
+        </button>
       </div>
     </div>
   );
 }
 
-/* ─── Feature card ───────────────────────────────────────────────────────── */
-function FeatureCard({
-  emoji,
-  title,
-  body,
-  badge,
-}: {
-  emoji: string;
-  title: string;
-  body: string;
-  badge?: string;
-}) {
+/* ─── iOS modal ─────────────────────────────────────────────────────────────── */
+function IosModal({ onClose }: { onClose: () => void }) {
   return (
-    <div className="rounded-2xl bg-[#0f1117] border border-white/[0.06] p-6 flex flex-col gap-3">
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-3xl" role="img" aria-label={title}>{emoji}</span>
-        {badge && (
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-[#5B8CFF] border border-[#5B8CFF]/30 rounded-full px-2 py-0.5 whitespace-nowrap">
-            {badge}
-          </span>
-        )}
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(5,8,10,.85)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "20px", padding: "36px", maxWidth: "320px", width: "100%", textAlign: "center" }}>
+        <div style={{ fontSize: "32px", marginBottom: "14px" }}></div>
+        <h3 style={{ fontFamily: "var(--font-space,'Space Grotesk',sans-serif)", fontWeight: 700, fontSize: "1.3rem", color: "var(--text)", margin: "0 0 10px" }}>Android only, for now</h3>
+        <p style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
+          Beacon is currently available for Android only. iOS version is coming soon.
+        </p>
+        <button onClick={onClose} style={{ marginTop: "22px", fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "12px", letterSpacing: ".06em", color: "var(--muted)", background: "none", border: "1px solid var(--line)", borderRadius: "8px", padding: "8px 20px", cursor: "pointer" }}>Got it</button>
       </div>
-      <h3 className="font-semibold text-lg text-white">{title}</h3>
-      <p className="text-[#71717a] text-sm leading-relaxed">{body}</p>
     </div>
   );
 }
 
-/* ─── Page ───────────────────────────────────────────────────────────────── */
+/* ─── inline icon svgs ──────────────────────────────────────────────────────── */
+const IconDownload = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/>
+  </svg>
+);
+const IconGitHub = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17 5.3 18 5.6 18 5.6c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"/>
+  </svg>
+);
+const IconWifi = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+    <path d="M2 8.6a15 15 0 0 1 20 0"/><path d="M5 12a10 10 0 0 1 14 0"/><path d="M8.5 15.4a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/>
+  </svg>
+);
+const IconMap = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/>
+  </svg>
+);
+const IconSliders = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+    <line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2.3"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15.5" cy="12" r="2.3"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="18" r="2.3"/>
+  </svg>
+);
+const IconNo = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+    <circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/>
+  </svg>
+);
+
+/* ─── shared button styles ──────────────────────────────────────────────────── */
+const btnPrimary: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "10px", whiteSpace: "nowrap",
+  fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "14px", fontWeight: 500, letterSpacing: ".02em",
+  color: "#03110d", background: "var(--accent)", textDecoration: "none",
+  padding: "15px 26px", borderRadius: "12px", border: "none", cursor: "pointer",
+  boxShadow: "0 0 34px rgba(59,130,246,.32)", transition: "transform .2s,box-shadow .2s",
+};
+const btnGhost: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "10px", whiteSpace: "nowrap",
+  fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "14px", letterSpacing: ".02em",
+  color: "var(--text)", background: "none", textDecoration: "none",
+  padding: "15px 24px", borderRadius: "12px", border: "1px solid rgba(255,255,255,.16)", cursor: "pointer",
+  transition: "border-color .2s,background .2s",
+};
+const mono: React.CSSProperties = { fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)" };
+const heading: React.CSSProperties = { fontFamily: "var(--font-space,'Space Grotesk',sans-serif)" };
+
+/* ─── page ───────────────────────────────────────────────────────────────────── */
 export default function HomePage() {
+  useReveal();
+
   return (
-    <main>
+    <div style={{ background: "var(--bg)", color: "var(--text)", fontFamily: "var(--font-sans,'IBM Plex Sans',system-ui,sans-serif)", position: "relative", overflowX: "hidden", WebkitFontSmoothing: "antialiased" }}>
+
+      {/* ── NAV ──────────────────────────────────────────────────────────── */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px clamp(20px,5vw,56px)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", background: "rgba(5,8,10,.55)", borderBottom: "1px solid var(--line)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "11px", ...heading, fontWeight: 600, fontSize: "18px", letterSpacing: "-.01em" }}>
+          <span className="bcn-ripple" style={{ position: "relative", display: "inline-flex", width: "11px", height: "11px", borderRadius: "50%", background: "var(--accent)" }} />
+          Beacon
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" style={{ ...mono, fontSize: "12.5px", letterSpacing: ".04em", color: "var(--muted)", textDecoration: "none", padding: "9px 14px", borderRadius: "9px", border: "1px solid var(--line)", transition: "color .2s,border-color .2s" }}>GitHub</a>
+          <DownloadButton label="Download" style={{ ...mono, fontSize: "12.5px", fontWeight: 500, letterSpacing: ".03em", color: "#03110d", background: "var(--accent)", padding: "9px 16px", borderRadius: "9px", border: "none", cursor: "pointer", boxShadow: "0 0 22px rgba(59,130,246,.28)", transition: "transform .2s,box-shadow .2s" }} />
+        </div>
+      </nav>
 
       {/* ══════════════════════════════════════════════════════════════════
-          FOLD 1 — HERO
-          "WiFi. No ads. No paywall."
+          FOLD 1 · HERO
       ═══════════════════════════════════════════════════════════════════ */}
-      <section
-        className="grid-bg relative overflow-hidden min-h-screen flex flex-col items-center justify-center text-center px-6 py-24"
-        aria-label="Hero"
-      >
-        {/* Radial glow */}
-        <div
-          className="pointer-events-none absolute inset-0 flex items-center justify-center"
-          aria-hidden="true"
-        >
-          <div className="w-[600px] h-[600px] rounded-full bg-[#5b8cff]/5 blur-3xl" />
-        </div>
-
-        <div className="relative z-10 max-w-2xl mx-auto">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#5B8CFF]/30 bg-[#5B8CFF]/10 px-4 py-1.5 text-xs font-medium text-[#5B8CFF] mb-8">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#5B8CFF] animate-pulse" />
-            Free · Open Source · No Ads
+      <section style={{ position: "relative", minHeight: "100svh", display: "flex", alignItems: "center", overflow: "hidden" }}>
+        <HeroCanvas />
+        {/* gradient overlay */}
+        <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(95deg,var(--bg) 4%,rgba(5,8,10,.72) 34%,rgba(5,8,10,0) 66%),linear-gradient(0deg,var(--bg) 1%,rgba(5,8,10,0) 26%)" }} />
+        <div style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "1200px", margin: "0 auto", padding: "120px clamp(20px,5vw,56px) 80px" }}>
+          <div style={{ maxWidth: "680px" }}>
+            <div data-reveal data-reveal-delay="0" style={{ display: "inline-flex", alignItems: "center", gap: "10px", whiteSpace: "nowrap", ...mono, fontSize: "12px", letterSpacing: ".16em", textTransform: "uppercase", color: "var(--accent)", border: "1px solid rgba(59,130,246,.3)", background: "rgba(59,130,246,.06)", padding: "8px 16px", borderRadius: "100px" }}>
+              <span className="bcn-blink" style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--accent)" }} />
+              Free · Open Source · No Ads
+            </div>
+            <h1 data-reveal data-reveal-delay="90" style={{ ...heading, fontWeight: 700, fontSize: "clamp(2.9rem,7.5vw,6rem)", lineHeight: 0.97, letterSpacing: "-.03em", margin: "26px 0 0", color: "var(--text)" }}>
+              Your WiFi.<br />Finally <span style={{ color: "var(--accent)" }}>clear.</span>
+            </h1>
+            <p data-reveal data-reveal-delay="170" style={{ fontSize: "clamp(1.05rem,1.7vw,1.3rem)", lineHeight: 1.55, color: "var(--muted)", maxWidth: "520px", margin: "24px 0 0" }}>
+              Signal strength, channel congestion, and smart fixes, in real time, with{" "}
+              <span style={{ color: "var(--text)", fontWeight: 500 }}>zero ads</span> and{" "}
+              <span style={{ color: "var(--text)", fontWeight: 500 }}>no paywall.</span>
+            </p>
+            <div data-reveal data-reveal-delay="250" style={{ display: "flex", flexWrap: "wrap", gap: "13px", margin: "36px 0 0" }}>
+              <DownloadButton label="Download for Android" style={{ ...btnPrimary }} />
+              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" style={{ ...btnGhost }}>
+                <IconGitHub /> View source
+              </a>
+            </div>
+            <p data-reveal data-reveal-delay="330" style={{ ...mono, fontSize: "12.5px", letterSpacing: ".05em", color: "var(--muted)", margin: "24px 0 0" }}>
+              Android 7.0+&nbsp;&nbsp;·&nbsp;&nbsp;~16 MB&nbsp;&nbsp;·&nbsp;&nbsp;Sideload APK&nbsp;&nbsp;·&nbsp;&nbsp;Play Store coming soon
+            </p>
           </div>
-
-          {/* Animated icon */}
-          <RadarPulse />
-
-          {/* Headline */}
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.1] mb-5">
-            Your WiFi.
-            <br />
-            <span className="text-[#5B8CFF]">Finally&nbsp;clear.</span>
-          </h1>
-
-          <p className="text-lg text-[#a1a1aa] max-w-md mx-auto mb-10 leading-relaxed">
-            Beacon shows signal strength, channel congestion, and smart fixes
-            in real time, with <strong className="text-white font-semibold">zero ads</strong> and{" "}
-            <strong className="text-white font-semibold">no paywall</strong>.
-          </p>
-
-          {/* CTA */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href={DOWNLOAD_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 rounded-2xl bg-[#5B8CFF] hover:bg-[#4a7aee] active:scale-95 transition-all px-8 py-4 font-semibold text-black text-base shadow-[0_0_32px_rgba(91,140,255,0.3)]"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M17.523 15.341l-.003-.002A5.998 5.998 0 0 0 18 13c0-1.933-.917-3.65-2.34-4.75L17.524 6.4A8.002 8.002 0 0 1 20 13a8.002 8.002 0 0 1-2.477 5.74l-1.84-1.84.84-.56ZM4 12a8.002 8.002 0 0 1 2.477-5.74l1.84 1.84A5.998 5.998 0 0 0 6 13c0 1.933.917 3.65 2.34 4.75L6.476 19.6A8.002 8.002 0 0 1 4 13v-1Zm8 2a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/>
-              </svg>
-              Download for Android
-            </a>
-            <a
-              href="https://github.com/jaga3421/Beacon"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 hover:border-white/20 px-8 py-4 text-sm font-medium text-[#a1a1aa] hover:text-white transition-colors"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2Z"/>
-              </svg>
-              View source
-            </a>
-          </div>
-
-          <p className="mt-6 text-xs text-[#52525b]">Android 7.0+ · ~16 MB · Sideload APK · Play Store coming soon</p>
         </div>
-
-        {/* Scroll hint */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[#52525b] text-xs">
-          <span>scroll</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d="M12 5v14M5 12l7 7 7-7" />
-          </svg>
+        {/* scroll cue */}
+        <div style={{ position: "absolute", bottom: "26px", left: "50%", transform: "translateX(-50%)", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", ...mono, fontSize: "11px", letterSpacing: ".22em", textTransform: "uppercase", color: "var(--muted)" }}>
+          scroll
+          <svg className="bcn-cue" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </div>
       </section>
 
-
       {/* ══════════════════════════════════════════════════════════════════
-          FOLD 2 — THE REAL STORY
-          "I was in Yercaud…"
+          FOLD 2 · STORY
       ═══════════════════════════════════════════════════════════════════ */}
-      <section
-        className="relative px-6 py-28 sm:py-36"
-        aria-label="Origin story"
-        id="story"
-      >
-        {/* Left accent line */}
-        <div className="pointer-events-none absolute left-0 top-0 h-full w-px bg-gradient-to-b from-transparent via-[#5B8CFF]/20 to-transparent" aria-hidden="true" />
-
-        <div className="max-w-2xl mx-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#5B8CFF] mb-6">
-            Why I built this
-          </p>
-
-          <h2 className="text-4xl sm:text-5xl font-bold leading-[1.15] mb-10 text-white">
-            My home is in{" "}
-            <a
-              href="https://en.wikipedia.org/wiki/Yercaud"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#5B8CFF] underline underline-offset-4 decoration-[#5B8CFF]/40 hover:decoration-[#5B8CFF] transition-colors"
-            >
-              Yercaud
-            </a>
-            .<br />
-            The WiFi is weak. The hills are not.
+      <section style={{ position: "relative", overflow: "hidden", padding: "clamp(90px,13vw,170px) clamp(20px,5vw,56px)" }}>
+        <div style={{ position: "absolute", top: "-120px", left: "-80px", width: "460px", height: "460px", borderRadius: "50%", background: "radial-gradient(circle,var(--accent),transparent 65%)", opacity: 0.1, filter: "blur(60px)", pointerEvents: "none" }} />
+        <div style={{ position: "relative", maxWidth: "880px", margin: "0 auto" }}>
+          <div data-reveal style={{ ...mono, fontSize: "14px", fontWeight: 500, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "22px" }}>Why I built this</div>
+          <h2 data-reveal data-reveal-delay="60" style={{ ...heading, fontWeight: 700, fontSize: "clamp(2rem,4.6vw,3.5rem)", lineHeight: 1.05, letterSpacing: "-.025em", margin: 0, maxWidth: "18ch" }}>
+            I was in{" "}
+            <a href="https://en.wikipedia.org/wiki/Yercaud" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "underline", textDecorationColor: "rgba(59,130,246,.4)", textUnderlineOffset: "5px" }}>Yercaud</a>
+            , looking for a good <span style={{ color: "var(--accent)" }}>WiFi spot.</span>
           </h2>
-
-          <div className="space-y-6 text-[#a1a1aa] text-lg leading-relaxed">
-            <p>
-              Yercaud is a hill station in Tamil Nadu. Beautiful place to live and work from, but
-              the hilly terrain means{" "}
-              <span className="text-white font-medium">weak, patchy WiFi connections</span>. I
-              kept moving my desk around trying to find the spot where the signal was actually
-              usable. Same problem at coffee shops in Chennai, some of them have great WiFi,
-              some are terrible.
+          <div style={{ display: "grid", gap: "22px", marginTop: "34px", maxWidth: "620px" }}>
+            <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
+              Yercaud is a hill station in Tamil Nadu. Beautiful place to live and work from, but the hilly terrain means weak, patchy signal. I kept moving my desk around, and when I go to coffee shops in Chennai, some have great WiFi and some are terrible.
             </p>
-            <p>
-              I downloaded a few free WiFi analysers to check signal strength and find the best
-              spot to sit. They all worked, sort of. But{" "}
-              <strong className="text-white font-semibold">every single one</strong> hit me with
-              a full-screen ad on open, blurred the signal readings behind a paywall, or both.
-              Just to see a number.
+            <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
+              Every free analyser I tried was the same. Open it, eat a full-screen ad. Dismiss it, and the signal values are blurred, <span style={{ color: "var(--text)" }}>"upgrade to see real numbers."</span> Tap upgrade: 500 a year for a number that is already yours.
             </p>
-            <p>
-              So I built Beacon over a weekend. Signal strength, channel info, smart
-              recommendations, all of it free and up front. No ads, no paywall, no account.
-              It always will be.
+            <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
+              So I built Beacon over a weekend. Signal strength, frequency, channel overlap, co-channel neighbours, all of it, with no ads and no paywall.{" "}
+              <span style={{ color: "var(--text)", fontWeight: 500 }}>It always will be.</span>
             </p>
           </div>
 
-          {/* Pull quote */}
-          <blockquote className="mt-12 border-l-2 border-[#5B8CFF] pl-6">
-            <p className="text-2xl font-semibold text-white leading-snug">
-              "The signal data is yours. You should not have to pay to see it."
-            </p>
+          <blockquote data-reveal style={{ ...heading, fontWeight: 500, fontSize: "clamp(1.5rem,3.3vw,2.4rem)", lineHeight: 1.25, letterSpacing: "-.02em", color: "var(--text)", borderLeft: "2px solid var(--accent)", padding: "6px 0 6px 26px", margin: "54px 0 0", maxWidth: "20ch" }}>
+            "The signal data is yours. You should not have to pay to see it."
           </blockquote>
 
-          {/* Mini map/location badge */}
-          <div className="mt-10 inline-flex items-center gap-3 rounded-xl bg-[#0f1117] border border-white/[0.06] px-5 py-3 text-sm text-[#71717a]">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B8CFF" strokeWidth="2" aria-hidden="true">
-              <path d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7Z"/>
-              <circle cx="12" cy="9" r="2.5"/>
-            </svg>
-            Born in{" "}
-            <a
-              href="https://en.wikipedia.org/wiki/Yercaud"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#5B8CFF] hover:underline"
-            >
-              Yercaud
-            </a>
-            , Tamil Nadu · shipped from Chennai
+          {/* contrast cards */}
+          <div data-reveal style={{ ...mono, fontSize: "14px", fontWeight: 500, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--muted)", margin: "64px 0 18px" }}>The difference</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: "18px" }}>
+            {/* every other app */}
+            <div data-reveal data-reveal-delay="0" style={{ border: "1px solid var(--line)", borderRadius: "18px", overflow: "hidden", background: "#0b0d0e", filter: "grayscale(.35)" }}>
+              <div style={{ background: "linear-gradient(90deg,#f59e0b,#ef4444)", color: "#1a0b00", ...mono, fontSize: "11px", fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", textAlign: "center", padding: "8px" }}>AD · Install Now</div>
+              <div style={{ padding: "30px 26px 32px", position: "relative" }}>
+                <div style={{ ...mono, fontSize: "11px", letterSpacing: ".1em", textTransform: "uppercase", color: "#5d6a6a" }}>Signal strength</div>
+                <div style={{ ...heading, fontSize: "3rem", fontWeight: 700, color: "#9aa6a6", filter: "blur(7px)", marginTop: "8px", userSelect: "none" }}>54 dBm</div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginTop: "18px", ...mono, fontSize: "12px", color: "#cdd6d6", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", padding: "8px 13px", borderRadius: "9px" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                  Upgrade · 500 / yr
+                </div>
+              </div>
+              <div style={{ padding: "14px 26px 22px", ...mono, fontSize: "11px", letterSpacing: ".14em", textTransform: "uppercase", color: "#5d6a6a", borderTop: "1px solid rgba(255,255,255,.05)" }}>Every other app</div>
+            </div>
+            {/* beacon */}
+            <div data-reveal data-reveal-delay="110" style={{ border: "1px solid rgba(59,130,246,.3)", borderRadius: "18px", overflow: "hidden", background: "var(--panel)", boxShadow: "0 0 50px rgba(59,130,246,.08)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "9px", ...mono, fontSize: "11px", fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--accent)", padding: "9px 16px", borderBottom: "1px solid var(--line)" }}>
+                <span className="bcn-blink" style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--accent)" }} />Live
+              </div>
+              <div style={{ padding: "30px 26px 32px" }}>
+                <div style={{ ...mono, fontSize: "11px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)" }}>Signal strength</div>
+                <div style={{ ...heading, fontSize: "3rem", fontWeight: 700, color: "var(--accent)", marginTop: "8px", textShadow: "0 0 28px rgba(59,130,246,.4)" }}>52 dBm</div>
+                <div style={{ display: "flex", alignItems: "flex-end", gap: "5px", height: "34px", marginTop: "18px" }}>
+                  {[35, 55, 78, 100, 62].map((h, i) => (
+                    <span key={i} style={{ width: "9px", height: `${h}%`, background: i < 4 ? "var(--accent)" : "rgba(59,130,246,.25)", borderRadius: "2px", opacity: i < 4 ? 0.85 : 1 }} />
+                  ))}
+                </div>
+                <div style={{ ...mono, fontSize: "12.5px", color: "var(--text)", marginTop: "16px" }}>Channel 11 · <span style={{ color: "var(--accent)" }}>least crowded</span></div>
+              </div>
+              <div style={{ padding: "14px 26px 22px", ...mono, fontSize: "11px", letterSpacing: ".14em", textTransform: "uppercase", color: "var(--accent)", borderTop: "1px solid var(--line)" }}>Beacon · free</div>
+            </div>
           </div>
+
+          <p data-reveal style={{ ...mono, fontSize: "12px", letterSpacing: ".05em", color: "var(--muted)", margin: "30px 0 0" }}>
+            Born in{" "}
+            <a href="https://en.wikipedia.org/wiki/Yercaud" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>Yercaud</a>
+            {" "}· Shipped from Chennai
+          </p>
         </div>
       </section>
-
 
       {/* ══════════════════════════════════════════════════════════════════
-          FOLD 3 — WHAT IT DOES + FINAL CTA
-          Four honest features, then download
+          FOLD 3 · FEATURES
       ═══════════════════════════════════════════════════════════════════ */}
-      <section
-        className="px-6 py-28 sm:py-36 border-t border-white/[0.04]"
-        aria-label="Features"
-        id="features"
-      >
-        <div className="max-w-4xl mx-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#5B8CFF] mb-4 text-center">
-            What you get
-          </p>
-          <h2 className="text-4xl sm:text-5xl font-bold text-center mb-4">
-            Everything. For free.
+      <section style={{ position: "relative", overflow: "hidden", background: "var(--bg2)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", padding: "clamp(90px,13vw,170px) clamp(20px,5vw,56px)" }}>
+        <div style={{ position: "absolute", bottom: "-140px", right: "-100px", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle,var(--accent2),transparent 65%)", opacity: 0.08, filter: "blur(70px)", pointerEvents: "none" }} />
+        <div style={{ position: "relative", maxWidth: "1080px", margin: "0 auto" }}>
+          <div data-reveal style={{ ...mono, fontSize: "14px", fontWeight: 500, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "20px" }}>What you get</div>
+          <h2 data-reveal data-reveal-delay="60" style={{ ...heading, fontWeight: 700, fontSize: "clamp(2rem,4.6vw,3.5rem)", lineHeight: 1.04, letterSpacing: "-.025em", margin: 0 }}>
+            Everything. <span style={{ color: "var(--accent)" }}>For free.</span>
           </h2>
-          <p className="text-[#71717a] text-center mb-14 max-w-md mx-auto">
-            No "pro" version. No features held back. No timer on your scan.
-          </p>
+          <p data-reveal data-reveal-delay="120" style={{ fontSize: "1.12rem", lineHeight: 1.6, color: "var(--muted)", maxWidth: "46ch", margin: "18px 0 0" }}>No "pro" version. No features held back. No timer on your scan.</p>
 
-          {/* Feature grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-20">
-            <FeatureCard
-              emoji="📡"
-              title="Live signal scan"
-              body="RSSI, frequency, channel, link speed, and band updated every 1.5 seconds. See the full picture of every network around you, not just your own."
-            />
-            <FeatureCard
-              emoji="🗺️"
-              title="Dead zone heatmap"
-              body="Walk around your space and watch a signal heatmap build in real time. Find the exact corner where it drops, then fix it."
-              badge="Coming soon"
-            />
-            <FeatureCard
-              emoji="🔧"
-              title="Smart recommendations"
-              body="Beacon analyses your channel neighbours and gives you specific actions: switch to channel 11, move the router, or change your band. Specific to your situation, not generic tips."
-            />
-            <FeatureCard
-              emoji="🚫"
-              title="Zero ads. Zero paywall."
-              body="No banners, no interstitials, no blurred values behind a subscription. Download it, use it, that is it. Open source, you can read every line."
-            />
-          </div>
-
-          {/* Final CTA */}
-          <div className="rounded-3xl bg-[#0f1117] border border-white/[0.06] p-10 sm:p-14 flex flex-col items-center text-center relative overflow-hidden">
-            {/* Glow */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
-              <div className="w-80 h-80 rounded-full bg-[#5b8cff]/8 blur-3xl" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(420px,1fr))", gap: "18px", marginTop: "48px" }}>
+            {/* Live scan */}
+            <div data-reveal data-reveal-delay="0" style={{ border: "1px solid var(--line)", borderRadius: "18px", background: "var(--panel)", overflow: "hidden" }}>
+              <ScanCanvas />
+              <div style={{ padding: "24px 28px 30px" }}>
+                <div style={{ color: "var(--accent)" }}><IconWifi /></div>
+                <h3 style={{ ...heading, fontWeight: 600, fontSize: "1.3rem", letterSpacing: "-.01em", margin: "18px 0 0" }}>Live signal scan</h3>
+                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>RSSI, frequency, channel, link speed, and band, refreshed every 1.5 seconds. The full picture of every network around you, not just your own.</p>
+              </div>
             </div>
-
-            <WifiMeterIcon size={64} className="relative z-10 mb-6" />
-
-            <h2 className="relative z-10 text-3xl sm:text-4xl font-bold mb-4">
-              Give it a try.
-            </h2>
-            <p className="relative z-10 text-[#71717a] mb-8 max-w-sm leading-relaxed">
-              Sideload the APK on your Android phone, scan your networks, and tell me what you
-              think. It takes about 30 seconds to install.
-            </p>
-
-            <a
-              href={DOWNLOAD_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative z-10 inline-flex items-center gap-3 rounded-2xl bg-[#5B8CFF] hover:bg-[#4a7aee] active:scale-95 transition-all px-8 py-4 font-semibold text-black text-base shadow-[0_0_40px_rgba(91,140,255,0.25)]"
-            >
-              Download APK (free, sideload)
-            </a>
-
-            <p className="relative z-10 mt-4 text-xs text-[#52525b]">
-              Android 7.0+ · ~16 MB · No account, no tracking
-            </p>
-            <p className="relative z-10 mt-2 text-xs text-[#52525b]">
-              Play Store listing coming soon
-            </p>
+            {/* Heatmap */}
+            <div data-reveal data-reveal-delay="90" style={{ border: "1px solid var(--line)", borderRadius: "18px", background: "var(--panel)", overflow: "hidden" }}>
+              <HeatCanvas />
+              <div style={{ padding: "24px 28px 30px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ color: "var(--accent)" }}><IconMap /></div>
+                  <span style={{ ...mono, fontSize: "10px", letterSpacing: ".14em", textTransform: "uppercase", color: "var(--accent)", border: "1px solid rgba(59,130,246,.3)", borderRadius: "100px", padding: "4px 10px" }}>Coming soon</span>
+                </div>
+                <h3 style={{ ...heading, fontWeight: 600, fontSize: "1.3rem", letterSpacing: "-.01em", margin: "18px 0 0" }}>Dead zone heatmap</h3>
+                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>Walk your space and watch the heatmap build in real time. Find the exact corner where signal drops, then fix it.</p>
+              </div>
+            </div>
+            {/* Recommendations */}
+            <div data-reveal data-reveal-delay="0" style={{ border: "1px solid var(--line)", borderRadius: "18px", background: "var(--panel)", overflow: "hidden" }}>
+              <RecoCanvas />
+              <div style={{ padding: "24px 28px 30px" }}>
+                <div style={{ color: "var(--accent)" }}><IconSliders /></div>
+                <h3 style={{ ...heading, fontWeight: 600, fontSize: "1.3rem", letterSpacing: "-.01em", margin: "18px 0 0" }}>Smart recommendations</h3>
+                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>Beacon reads your channel neighbours and gives specific actions, switch to channel 11, move the router, change band. Your actual situation, not generic tips.</p>
+              </div>
+            </div>
+            {/* Free */}
+            <div data-reveal data-reveal-delay="90" style={{ border: "1px solid rgba(59,130,246,.28)", borderRadius: "18px", background: "linear-gradient(160deg,rgba(59,130,246,.07),var(--panel) 55%)", overflow: "hidden" }}>
+              <FreeCanvas />
+              <div style={{ padding: "24px 28px 30px" }}>
+                <div style={{ color: "var(--accent)" }}><IconNo /></div>
+                <h3 style={{ ...heading, fontWeight: 600, fontSize: "1.3rem", letterSpacing: "-.01em", margin: "18px 0 0" }}>Zero ads. Zero paywall.</h3>
+                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>No banners, no interstitials, no values blurred behind a subscription. Download it, use it, that is it. Open source, read every line.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-
-      {/* ── Footer ──────────────────────────────────────────────────────── */}
-      <footer className="border-t border-white/[0.04] px-6 py-10 text-center text-xs text-[#52525b]">
-        <div className="flex items-center justify-center gap-1.5 mb-3">
-          <WifiMeterIcon size={18} />
-          <span className="font-semibold text-[#71717a]">Beacon</span>
+      {/* ══════════════════════════════════════════════════════════════════
+          FOLD 4 · CTA + FOOTER
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section style={{ position: "relative", overflow: "hidden", padding: "clamp(100px,15vw,190px) clamp(20px,5vw,56px) 0" }}>
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-60%)", width: "760px", height: "760px", maxWidth: "130vw", borderRadius: "50%", background: "radial-gradient(circle,var(--accent),transparent 62%)", opacity: 0.1, filter: "blur(80px)", pointerEvents: "none" }} />
+        <div style={{ position: "relative", maxWidth: "760px", margin: "0 auto", textAlign: "center" }}>
+          <h2 data-reveal style={{ ...heading, fontWeight: 700, fontSize: "clamp(2.6rem,7vw,5rem)", lineHeight: 1, letterSpacing: "-.03em", margin: 0 }}>
+            Give it a <span style={{ color: "var(--accent)" }}>try.</span>
+          </h2>
+          <p data-reveal data-reveal-delay="80" style={{ fontSize: "clamp(1.05rem,1.7vw,1.25rem)", lineHeight: 1.6, color: "var(--muted)", maxWidth: "44ch", margin: "24px auto 0" }}>
+            Sideload the APK on your Android phone, scan your networks, and tell me what you think. It takes about 30 seconds.
+          </p>
+          <div data-reveal data-reveal-delay="160" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "13px", marginTop: "38px" }}>
+            <DownloadButton label="Download Beacon, it's free" style={{ ...btnPrimary, padding: "16px 30px", boxShadow: "0 0 40px rgba(59,130,246,.35)" }} />
+            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" style={{ ...btnGhost, padding: "16px 26px" }}>View source</a>
+          </div>
+          <p data-reveal data-reveal-delay="240" style={{ ...mono, fontSize: "12.5px", letterSpacing: ".05em", color: "var(--muted)", margin: "20px 0 4px" }}>
+            Android 7.0 · ~16 MB · No account, no tracking
+          </p>
+          <p data-reveal style={{ ...mono, fontSize: "11px", letterSpacing: ".04em", color: "rgba(166,186,184,.5)", margin: 0 }}>
+            v{VERSION} · Play Store listing coming soon
+          </p>
         </div>
-        <p>
-          Built by Jagadeesh ·{" "}
-          <a
-            href="https://github.com/jaga3421/Beacon"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-white transition-colors underline underline-offset-2"
-          >
-            Open source on GitHub
-          </a>
-        </p>
-        <p className="mt-2">Free forever. No ads. No account. No excuses.</p>
-      </footer>
 
-    </main>
+        <footer style={{ position: "relative", maxWidth: "1080px", margin: "clamp(90px,13vw,150px) auto 0", padding: "32px 0", borderTop: "1px solid var(--line)", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "18px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "11px", ...heading, fontWeight: 600, fontSize: "16px" }}>
+            <span style={{ width: "9px", height: "9px", borderRadius: "50%", background: "var(--accent)", boxShadow: "0 0 12px var(--accent)" }} />
+            Beacon <span style={{ ...mono, fontWeight: 400, fontSize: "12.5px", color: "var(--muted)", marginLeft: "4px" }}>· Built by Jagadeesh</span>
+          </div>
+          <div style={{ ...mono, fontSize: "12px", letterSpacing: ".04em", color: "var(--muted)", textAlign: "right" }}>
+            Free forever. No ads. No account. No excuses.<br />
+            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>Open source on GitHub</a>
+          </div>
+        </footer>
+      </section>
+
+    </div>
   );
 }

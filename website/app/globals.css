@@ -1,37 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --bg:      #07090d;
-  --surface: #0f1117;
-  --accent:  #5b8cff;
-  --cyan:    #22d3ee;
-  --text:    #f4f4f5;
-  --muted:   #71717a;
-  --border:  rgba(255,255,255,0.08);
+  --accent:  #3B82F6;
+  --accent2: #22d3ee;
+  --bg:      #05080a;
+  --bg2:     #0a1216;
+  --panel:   #0e171c;
+  --line:    rgba(255,255,255,.08);
+  --text:    #e9f3f0;
+  --muted:   #a6bab8;
 }
 
-html { scroll-behavior: smooth; }
+html  { scroll-behavior: smooth; font-size: 17px; }
+body  { margin: 0; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+*     { box-sizing: border-box; }
+::selection { background: var(--accent); color: #03110d; }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-geist-sans, system-ui, sans-serif);
-}
+@keyframes bcn-blink  { 0%,100%{opacity:1;} 50%{opacity:.2;} }
+@keyframes bcn-ripple { 0%{box-shadow:0 0 0 0 rgba(59,130,246,.55);} 70%,100%{box-shadow:0 0 0 9px rgba(59,130,246,0);} }
+@keyframes bcn-cue    { 0%,100%{transform:translateY(0);opacity:.45;} 50%{transform:translateY(7px);opacity:1;} }
 
-::selection { background: var(--accent); color: #000; }
-
-/* Subtle grid bg for hero */
-.grid-bg {
-  background-image:
-    linear-gradient(rgba(91,140,255,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(91,140,255,0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-@keyframes pulse-ring {
-  0%   { transform: scale(0.8); opacity: 0.6; }
-  100% { transform: scale(2.2); opacity: 0; }
-}
-.pulse-ring { animation: pulse-ring 2.4s ease-out infinite; }
-.pulse-ring-2 { animation: pulse-ring 2.4s ease-out 0.8s infinite; }
-.pulse-ring-3 { animation: pulse-ring 2.4s ease-out 1.6s infinite; }
+.bcn-cue    { animation: bcn-cue    1.8s ease-in-out infinite; }
+.bcn-blink  { animation: bcn-blink  1.6s ease-in-out infinite; }
+.bcn-ripple { animation: bcn-ripple 2.2s ease-out infinite; }
