@@ -7,6 +7,19 @@ const VERSION    = versionData.version;
 const APK_URL    = versionData.apkUrl;
 const GITHUB_URL = "https://github.com/jaga3421/Beacon";
 
+/* ─── logo icon ─────────────────────────────────────────────────────────────── */
+function BeaconIcon({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 108 108" fill="none" aria-hidden="true">
+      <path d="M 18,55 A 40,40 0 0 1 90,55" stroke="var(--accent)" strokeWidth="7" strokeLinecap="round"/>
+      <path d="M 29,60 A 28,28 0 0 1 79,60" stroke="var(--accent)" strokeWidth="7" strokeLinecap="round"/>
+      <path d="M 40,65 A 16,16 0 0 1 68,65" stroke="var(--accent)" strokeWidth="7" strokeLinecap="round"/>
+      <line x1="54" y1="72" x2="78" y2="48" stroke="var(--accent)" strokeWidth="7" strokeLinecap="round"/>
+      <circle cx="54" cy="72" r="5.5" fill="var(--accent)"/>
+    </svg>
+  );
+}
+
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
 type Device = "android" | "ios" | "desktop" | "init";
 const ACCENT = { r: 59, g: 130, b: 246 }; // #3B82F6
@@ -332,7 +345,7 @@ function QrModal({ onClose }: { onClose: () => void }) {
         <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "11px", letterSpacing: ".16em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "20px" }}>Scan to download APK</div>
         <div style={{ background: "#0e171c", borderRadius: "12px", padding: "16px", display: "inline-block" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qrSrc} alt="QR code to download Beacon APK" width={176} height={176} style={{ display: "block" }} />
+          <img src={qrSrc} alt="QR code to download Beacon APK" width={176} height={176} loading="lazy" style={{ display: "block" }} />
         </div>
         <p style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "14px", color: "var(--muted)", margin: "18px 0 0", lineHeight: 1.5 }}>
           Scan with your Android phone to download Beacon v{VERSION} directly.
@@ -425,8 +438,8 @@ export default function HomePage() {
 
       {/* ── NAV ──────────────────────────────────────────────────────────── */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px clamp(20px,5vw,56px)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", background: "rgba(5,8,10,.55)", borderBottom: "1px solid var(--line)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "11px", ...heading, fontWeight: 600, fontSize: "18px", letterSpacing: "-.01em" }}>
-          <span className="bcn-ripple" style={{ position: "relative", display: "inline-flex", width: "11px", height: "11px", borderRadius: "50%", background: "var(--accent)" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", ...heading, fontWeight: 600, fontSize: "18px", letterSpacing: "-.01em" }}>
+          <BeaconIcon size={26} />
           Beacon
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- rounded-rect dark background -->
+  <rect width="32" height="32" rx="7" fill="#05080a"/>
+  <!-- outer WiFi arc -->
+  <path d="M 4,17 A 12,12 0 0 1 28,17" fill="none" stroke="#3B82F6" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- middle WiFi arc -->
+  <path d="M 7.5,18.5 A 8.5,8.5 0 0 1 24.5,18.5" fill="none" stroke="#3B82F6" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- inner WiFi arc -->
+  <path d="M 11,20 A 5,5 0 0 1 21,20" fill="none" stroke="#3B82F6" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- meter needle, 45° upper-right from pivot (16,22) -->
+  <line x1="16" y1="22" x2="23" y2="15" stroke="#3B82F6" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- pivot dot -->
+  <circle cx="16" cy="22" r="2.2" fill="#3B82F6"/>
+</svg>
