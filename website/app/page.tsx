@@ -627,12 +627,12 @@ function DownloadButton({ label, style, className }: { label: string; style?: Re
 function QrModal({ onClose }: { onClose: () => void }) {
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(APK_URL)}&color=e9f3f0&bgcolor=0e171c&margin=12&format=svg`;
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(5,8,10,.85)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "20px", padding: "36px", maxWidth: "340px", width: "100%", textAlign: "center", boxShadow: `0 0 80px rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},.15)` }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 9999, isolation: "isolate", background: "rgba(5,8,10,.88)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "rgba(14,23,28,0.95)", border: "1px solid rgba(59,130,246,.25)", borderRadius: "22px", padding: "36px", maxWidth: "340px", width: "100%", textAlign: "center", boxShadow: `0 0 0 1px rgba(255,255,255,.06), 0 40px 100px rgba(0,0,0,.7), 0 0 80px rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},.2)` }}>
         <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "11px", letterSpacing: ".16em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "20px" }}>Scan to download APK</div>
         <div style={{ background: "#0e171c", borderRadius: "12px", padding: "16px", display: "inline-block" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qrSrc} alt="QR code to download Beacon APK" width={176} height={176} loading="lazy" style={{ display: "block" }} />
+          <img src={qrSrc} alt="QR code to download Beacon APK" width={176} height={176} style={{ display: "block" }} />
         </div>
         <p style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "14px", color: "var(--muted)", margin: "18px 0 0", lineHeight: 1.5 }}>
           Scan with your Android phone to download Beacon v{VERSION} directly.
@@ -653,8 +653,8 @@ function QrModal({ onClose }: { onClose: () => void }) {
 /* ─── iOS modal ─────────────────────────────────────────────────────────────── */
 function IosModal({ onClose }: { onClose: () => void }) {
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(5,8,10,.85)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "20px", padding: "36px", maxWidth: "320px", width: "100%", textAlign: "center" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 9999, isolation: "isolate", background: "rgba(5,8,10,.88)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "rgba(14,23,28,0.95)", border: "1px solid rgba(255,255,255,.08)", borderRadius: "22px", padding: "36px", maxWidth: "320px", width: "100%", textAlign: "center", boxShadow: "0 40px 100px rgba(0,0,0,.7)" }}>
         <div style={{ fontSize: "32px", marginBottom: "14px" }}></div>
         <h3 style={{ fontFamily: "var(--font-space,'Space Grotesk',sans-serif)", fontWeight: 700, fontSize: "1.3rem", color: "var(--text)", margin: "0 0 10px" }}>Android only, for now</h3>
         <p style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
