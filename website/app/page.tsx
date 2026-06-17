@@ -629,7 +629,7 @@ export default function HomePage() {
         <footer style={{ position: "relative", maxWidth: "1080px", margin: "clamp(90px,13vw,150px) auto 0", padding: "32px 0", borderTop: "1px solid var(--line)", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "11px", ...heading, fontWeight: 600, fontSize: "16px" }}>
             <span style={{ width: "9px", height: "9px", borderRadius: "50%", background: "var(--accent)", boxShadow: "0 0 12px var(--accent)" }} />
-            Beacon <span style={{ ...mono, fontWeight: 400, fontSize: "12.5px", color: "var(--muted)", marginLeft: "4px" }}>· Built by Jagadeesh</span>
+            Beacon <span style={{ ...mono, fontWeight: 400, fontSize: "12.5px", color: "var(--muted)", marginLeft: "4px" }}>· Built by <a href="https://jagadee.sh" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline", textDecorationColor: "rgba(166,186,184,.35)", textUnderlineOffset: "3px" }}>Jagadee.sh</a></span>
           </div>
           <div style={{ ...mono, fontSize: "12px", letterSpacing: ".04em", color: "var(--muted)", textAlign: "right" }}>
             Free forever. No ads. No account. No excuses.<br />
