@@ -20,6 +20,42 @@ body  { margin: 0; background: var(--bg); color: var(--text); -webkit-font-smoot
 @keyframes bcn-ripple { 0%{box-shadow:0 0 0 0 rgba(59,130,246,.55);} 70%,100%{box-shadow:0 0 0 9px rgba(59,130,246,0);} }
 @keyframes bcn-cue    { 0%,100%{transform:translateY(0);opacity:.45;} 50%{transform:translateY(7px);opacity:1;} }
 
+/* Ambient background blobs */
+@keyframes bcn-blob-1 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%     { transform: translate(80px,-60px) scale(1.12); }
+  66%     { transform: translate(-40px,70px)  scale(0.92); }
+}
+@keyframes bcn-blob-2 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%     { transform: translate(-60px,50px) scale(1.08); }
+  66%     { transform: translate(55px,-80px)  scale(1.15); }
+}
+@keyframes bcn-blob-3 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%     { transform: translate(40px,30px) scale(1.06); }
+}
+
 .bcn-cue    { animation: bcn-cue    1.8s ease-in-out infinite; }
 .bcn-blink  { animation: bcn-blink  1.6s ease-in-out infinite; }
-.bcn-ripple { animation: bcn-ripple 2.2s ease-out infinite; }
+.bcn-ripple { animation: bcn-ripple 2.2s ease-out  infinite; }
+.bcn-blob-1 { animation: bcn-blob-1 26s ease-in-out infinite; }
+.bcn-blob-2 { animation: bcn-blob-2 32s ease-in-out infinite; }
+.bcn-blob-3 { animation: bcn-blob-3 20s ease-in-out infinite; }
+
+/* Responsive story grid */
+.story-grid { display: block; }
+.phone-col  { display: none;  }
+@media (min-width: 960px) {
+  .story-grid {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) 285px;
+    gap: clamp(48px,6vw,96px);
+    align-items: start;
+  }
+  .phone-col {
+    display: block;
+    position: sticky;
+    top: 100px;
+  }
+}

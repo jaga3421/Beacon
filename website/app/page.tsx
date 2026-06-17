@@ -140,7 +140,7 @@ function ScanCanvas() {
     const frame = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.05); last = now;
       const { W, H } = box;
-      phase += dt * 1.6;
+      phase += dt * 0.8;
       data.shift();
       const v = 0.5 + 0.26 * Math.sin(phase) + 0.12 * Math.sin(phase * 2.7) + 0.06 * (Math.random() - 0.5);
       data.push(Math.max(0.08, Math.min(0.92, v)));
@@ -281,6 +281,293 @@ function FreeCanvas() {
     return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, []);
   return <canvas ref={ref} style={{ display: "block", width: "100%", height: "140px" }} />;
+}
+
+/* ─── phone mockup ──────────────────────────────────────────────────────────── */
+function MiniWave() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current; if (!c) return;
+    const ctx = c.getContext("2d")!;
+    const W = c.width, H = c.height;
+    const N = 60; const data = new Array(N).fill(0.5);
+    let ph = 0, last = performance.now(), raf = 0;
+    const frame = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.05); last = now; ph += dt * 0.8;
+      data.shift();
+      data.push(Math.max(0.1, Math.min(0.9, 0.5 + 0.26 * Math.sin(ph) + 0.1 * Math.sin(ph * 2.7) + 0.04 * (Math.random() - 0.5))));
+      ctx.clearRect(0, 0, W, H);
+      const xA = (i: number) => i / (N - 1) * W, yA = (v: number) => H - 4 - v * (H - 8);
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, "rgba(59,130,246,.38)"); g.addColorStop(1, "rgba(59,130,246,0)");
+      ctx.beginPath(); ctx.moveTo(0, H);
+      for (let i = 0; i < N; i++) ctx.lineTo(xA(i), yA(data[i]));
+      ctx.lineTo(W, H); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+      ctx.beginPath();
+      for (let i = 0; i < N; i++) { i ? ctx.lineTo(xA(i), yA(data[i])) : ctx.moveTo(xA(i), yA(data[i])); }
+      ctx.strokeStyle = "rgba(59,130,246,.95)"; ctx.lineWidth = 1.5; ctx.shadowColor = "rgba(59,130,246,.6)"; ctx.shadowBlur = 5; ctx.stroke(); ctx.shadowBlur = 0;
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return <canvas ref={ref} width={220} height={56} style={{ display: "block", width: "100%", height: "56px" }} />;
+}
+
+const NETS = [
+  { ssid: "Home_5G",   ch: 36, band: "5 GHz", base: -52, bars: 4 },
+  { ssid: "AndroidAP", ch:  6, band: "2.4 GHz", base: -67, bars: 3 },
+  { ssid: "Jio_FIBER", ch:  1, band: "2.4 GHz", base: -81, bars: 1 },
+];
+function qualColor(dbm: number) {
+  if (dbm >= -60) return "#22c55e";
+  if (dbm >= -70) return "#f59e0b";
+  if (dbm >= -80) return "#f97316";
+  return "#ef4444";
+}
+function qualLabel(dbm: number) {
+  if (dbm >= -60) return "Excellent";
+  if (dbm >= -70) return "Good";
+  if (dbm >= -80) return "Fair";
+  return "Weak";
+}
+function SignalBars({ bars, color }: { bars: number; color: string }) {
+  const heights = [38, 55, 72, 90];
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: "2px", height: "16px" }}>
+      {heights.map((h, i) => (
+        <div key={i} style={{ width: "3px", height: `${h}%`, borderRadius: "1px", background: i < bars ? color : "rgba(255,255,255,0.12)" }} />
+      ))}
+    </div>
+  );
+}
+
+function PhoneMockup() {
+  const [screen, setScreen] = useState(0);
+  const [fade, setFade]     = useState(false);
+  const [rssi, setRssi]     = useState(NETS.map(n => n.base));
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setFade(true);
+      setTimeout(() => { setScreen(s => (s + 1) % 3); setFade(false); }, 360);
+    }, 4000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setRssi(prev => prev.map((v, i) => Math.max(-92, Math.min(-38, v + Math.round((Math.random() - 0.5) * 4)))));
+    }, 1100);
+    return () => clearInterval(t);
+  }, []);
+
+  const phoneW = 270, phoneH = 560;
+  const padX = 10, padTop = 12, padBot = 14;
+  const screenW = phoneW - padX * 2, screenH = phoneH - padTop - padBot;
+
+  /* status bar */
+  const StatusBar = () => (
+    <div style={{ height: "26px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 14px", flexShrink: 0 }}>
+      <span style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "11px", color: "rgba(233,243,240,.9)", fontWeight: 500 }}>9:41</span>
+      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+        <svg width="15" height="11" viewBox="0 0 15 11" fill="none"><path d="M7.5 2 A7,7 0 0 1 15,9" stroke="rgba(233,243,240,.7)" strokeWidth="1.4" strokeLinecap="round"/><path d="M7.5 4 A5,5 0 0 1 13,9" stroke="rgba(233,243,240,.85)" strokeWidth="1.4" strokeLinecap="round"/><path d="M7.5 6 A3,3 0 0 1 11,9" stroke="rgba(233,243,240,.95)" strokeWidth="1.4" strokeLinecap="round"/><circle cx="7.5" cy="9.5" r="1.2" fill="rgba(233,243,240,.95)"/></svg>
+        <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="19" height="10" rx="2" stroke="rgba(233,243,240,.5)" strokeWidth="0.8"/><rect x="2" y="2" width="14" height="7" rx="1" fill="rgba(233,243,240,.85)"/><rect x="20" y="3.5" width="1.5" height="4" rx="0.75" fill="rgba(233,243,240,.4)"/></svg>
+      </div>
+    </div>
+  );
+
+  /* ── screen 0: network list ─────────────────────────────────────────── */
+  const Screen0 = () => (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* app bar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 14px 10px", borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width="18" height="18" viewBox="0 0 108 108" fill="none"><path d="M 18,55 A 40,40 0 0 1 90,55" stroke="#3B82F6" strokeWidth="8" strokeLinecap="round"/><path d="M 29,60 A 28,28 0 0 1 79,60" stroke="#3B82F6" strokeWidth="8" strokeLinecap="round"/><path d="M 40,65 A 16,16 0 0 1 68,65" stroke="#3B82F6" strokeWidth="8" strokeLinecap="round"/><line x1="54" y1="72" x2="78" y2="48" stroke="#3B82F6" strokeWidth="8" strokeLinecap="round"/><circle cx="54" cy="72" r="6" fill="#3B82F6"/></svg>
+          <span style={{ fontFamily: "var(--font-space,'Space Grotesk',sans-serif)", fontWeight: 700, fontSize: "16px", color: "#e9f3f0" }}>Beacon</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "5px", fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "9.5px", letterSpacing: ".12em", textTransform: "uppercase", color: "#3B82F6" }}>
+          <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#3B82F6", animation: "bcn-blink 1.6s ease-in-out infinite", display: "inline-block" }} />
+          LIVE
+        </div>
+      </div>
+      {/* network rows */}
+      <div style={{ flex: 1, overflow: "hidden", padding: "6px 10px", display: "flex", flexDirection: "column", gap: "6px" }}>
+        {NETS.map((n, i) => {
+          const col = qualColor(rssi[i]);
+          const bars = rssi[i] >= -60 ? 4 : rssi[i] >= -70 ? 3 : rssi[i] >= -80 ? 2 : 1;
+          return (
+            <div key={n.ssid} style={{ background: "rgba(255,255,255,.045)", border: "1px solid rgba(255,255,255,.07)", borderRadius: "10px", padding: "9px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "12px", fontWeight: 600, color: "#e9f3f0", marginBottom: "3px" }}>{n.ssid}</div>
+                <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "9.5px", color: "rgba(166,186,184,.7)", letterSpacing: ".04em" }}>
+                  {rssi[i]} dBm · CH {n.ch} · {n.band}
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+                <SignalBars bars={bars} color={col} />
+                <span style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "8px", color: col, letterSpacing: ".06em" }}>{qualLabel(rssi[i])}</span>
+              </div>
+            </div>
+          );
+        })}
+        {/* extra dim network */}
+        <div style={{ background: "rgba(255,255,255,.025)", border: "1px solid rgba(255,255,255,.05)", borderRadius: "10px", padding: "9px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.5 }}>
+          <div>
+            <div style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "12px", fontWeight: 600, color: "#e9f3f0" }}>Cafe_Guest</div>
+            <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "9.5px", color: "rgba(166,186,184,.7)", letterSpacing: ".04em" }}>-88 dBm · CH 11 · 2.4 GHz</div>
+          </div>
+          <SignalBars bars={1} color="#ef4444" />
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ── screen 1: live signal detail ───────────────────────────────────── */
+  const Screen1 = () => {
+    const v = rssi[0], col = qualColor(v);
+    return (
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {/* app bar */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 14px 10px", borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(166,186,184,.7)" strokeWidth="2.2" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
+          <span style={{ fontFamily: "var(--font-space,'Space Grotesk',sans-serif)", fontWeight: 600, fontSize: "14px", color: "#e9f3f0" }}>Home_5G</span>
+        </div>
+        {/* big RSSI */}
+        <div style={{ textAlign: "center", padding: "16px 14px 10px" }}>
+          <div style={{ fontFamily: "var(--font-space,'Space Grotesk',sans-serif)", fontWeight: 700, fontSize: "46px", color: col, lineHeight: 1, textShadow: `0 0 30px ${col}55` }}>{v}</div>
+          <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "10px", letterSpacing: ".14em", textTransform: "uppercase", color: "rgba(166,186,184,.7)", marginTop: "2px" }}>dBm</div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "5px", marginTop: "8px", background: `${col}18`, border: `1px solid ${col}44`, borderRadius: "100px", padding: "3px 10px" }}>
+            <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: col, display: "inline-block" }} />
+            <span style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "9px", letterSpacing: ".12em", textTransform: "uppercase", color: col }}>{qualLabel(v)}</span>
+          </div>
+        </div>
+        {/* waveform */}
+        <div style={{ margin: "0 12px 8px", background: "rgba(59,130,246,.06)", border: "1px solid rgba(59,130,246,.15)", borderRadius: "8px", overflow: "hidden", padding: "4px 0" }}>
+          <MiniWave />
+        </div>
+        {/* details */}
+        <div style={{ padding: "0 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "7px" }}>
+          {[["Band", "5 GHz"], ["Channel", "36"], ["Frequency", "5180 MHz"], ["Link Speed", "433 Mbps"]].map(([k, val]) => (
+            <div key={k} style={{ background: "rgba(255,255,255,.04)", borderRadius: "8px", padding: "7px 9px" }}>
+              <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "8.5px", letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(166,186,184,.55)", marginBottom: "2px" }}>{k}</div>
+              <div style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "11.5px", fontWeight: 600, color: "#e9f3f0" }}>{val}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  /* ── screen 2: channel analysis ─────────────────────────────────────── */
+  const Screen2 = () => (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* app bar */}
+      <div style={{ padding: "8px 14px 10px", borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+        <span style={{ fontFamily: "var(--font-space,'Space Grotesk',sans-serif)", fontWeight: 600, fontSize: "14px", color: "#e9f3f0" }}>Channel Analysis</span>
+      </div>
+      {/* recommendation card */}
+      <div style={{ margin: "10px 10px 8px", background: "rgba(59,130,246,.12)", border: "1px solid rgba(59,130,246,.3)", borderRadius: "10px", padding: "10px 12px" }}>
+        <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "8.5px", letterSpacing: ".14em", textTransform: "uppercase", color: "rgba(59,130,246,.8)", marginBottom: "4px" }}>Recommendation</div>
+        <div style={{ fontFamily: "var(--font-space,'Space Grotesk',sans-serif)", fontWeight: 700, fontSize: "14px", color: "#3B82F6" }}>Switch to Channel 11</div>
+        <div style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "10px", color: "rgba(166,186,184,.8)", marginTop: "2px" }}>Least congested — 0 competing networks</div>
+      </div>
+      {/* channel bars */}
+      <div style={{ padding: "0 12px", display: "flex", flexDirection: "column", gap: "7px" }}>
+        <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "8.5px", letterSpacing: ".12em", textTransform: "uppercase", color: "rgba(166,186,184,.6)", marginBottom: "2px" }}>2.4 GHz Channels</div>
+        {[
+          { ch: 1,  nets: 3, pct: 0.88, col: "#ef4444" },
+          { ch: 6,  nets: 2, pct: 0.60, col: "#f97316" },
+          { ch: 11, nets: 0, pct: 0.06, col: "#3B82F6"  },
+        ].map(({ ch, nets, pct, col }) => (
+          <div key={ch}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3px" }}>
+              <span style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "10px", color: ch === 11 ? "#3B82F6" : "rgba(233,243,240,.7)", fontWeight: ch === 11 ? 700 : 400 }}>
+                CH {ch} {ch === 11 ? "← use this" : ""}
+              </span>
+              <span style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "9px", color: "rgba(166,186,184,.6)" }}>{nets} net{nets !== 1 ? "s" : ""}</span>
+            </div>
+            <div style={{ height: "6px", background: "rgba(255,255,255,.07)", borderRadius: "3px", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${pct * 100}%`, background: col, borderRadius: "3px", boxShadow: ch === 11 ? `0 0 6px ${col}` : "none", transition: "width .6s ease" }} />
+            </div>
+          </div>
+        ))}
+        {/* 5 GHz section */}
+        <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "8.5px", letterSpacing: ".12em", textTransform: "uppercase", color: "rgba(166,186,184,.6)", marginTop: "6px", marginBottom: "2px" }}>5 GHz Channels</div>
+        {[{ ch: 36, nets: 1, pct: 0.22, col: "#f59e0b" }, { ch: 40, nets: 0, pct: 0.04, col: "#22c55e" }].map(({ ch, nets, pct, col }) => (
+          <div key={ch}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3px" }}>
+              <span style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "10px", color: "rgba(233,243,240,.7)" }}>CH {ch}</span>
+              <span style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "9px", color: "rgba(166,186,184,.6)" }}>{nets} net{nets !== 1 ? "s" : ""}</span>
+            </div>
+            <div style={{ height: "6px", background: "rgba(255,255,255,.07)", borderRadius: "3px", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${pct * 100}%`, background: col, borderRadius: "3px" }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const SCREENS = [Screen0, Screen1, Screen2];
+  const ActiveScreen = SCREENS[screen];
+  const labels = ["Network Scanner", "Live Signal", "Channel Analysis"];
+
+  return (
+    <div style={{ position: "relative", display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
+      {/* phone frame */}
+      <div style={{
+        width: phoneW, height: phoneH,
+        background: "linear-gradient(145deg,#1a1a1a,#0d0d0d)",
+        borderRadius: "36px",
+        padding: `${padTop}px ${padX}px ${padBot}px`,
+        boxShadow: "0 0 0 1px rgba(255,255,255,.08), 0 0 0 2px rgba(0,0,0,.8), 0 30px 80px rgba(0,0,0,.7), 0 0 80px rgba(59,130,246,.12)",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+      }}>
+        {/* side button marks */}
+        <div style={{ position: "absolute", left: "-3px", top: "90px", width: "3px", height: "28px", background: "#2a2a2a", borderRadius: "2px 0 0 2px" }} />
+        <div style={{ position: "absolute", left: "-3px", top: "128px", width: "3px", height: "44px", background: "#2a2a2a", borderRadius: "2px 0 0 2px" }} />
+        <div style={{ position: "absolute", right: "-3px", top: "108px", width: "3px", height: "56px", background: "#2a2a2a", borderRadius: "0 2px 2px 0" }} />
+        {/* screen bezel */}
+        <div style={{
+          flex: 1,
+          background: "#06090d",
+          borderRadius: "26px",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          border: "1px solid rgba(255,255,255,.05)",
+          boxShadow: "inset 0 0 20px rgba(0,0,0,.5)",
+        }}>
+          <StatusBar />
+          {/* punch-hole camera indicator */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "2px" }}>
+            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#111" }} />
+          </div>
+          {/* screen content with fade transition */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", opacity: fade ? 0 : 1, transition: "opacity 0.36s ease" }}>
+            <ActiveScreen />
+          </div>
+          {/* home pill */}
+          <div style={{ display: "flex", justifyContent: "center", padding: "8px 0 6px" }}>
+            <div style={{ width: "52px", height: "4px", borderRadius: "2px", background: "rgba(233,243,240,.25)" }} />
+          </div>
+        </div>
+      </div>
+      {/* screen indicator dots */}
+      <div style={{ display: "flex", gap: "7px" }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{ width: i === screen ? "18px" : "6px", height: "6px", borderRadius: "3px", background: i === screen ? "#3B82F6" : "rgba(166,186,184,.25)", transition: "all .4s ease", boxShadow: i === screen ? "0 0 8px rgba(59,130,246,.5)" : "none" }} />
+        ))}
+      </div>
+      {/* current screen label */}
+      <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "10px", letterSpacing: ".14em", textTransform: "uppercase", color: "rgba(166,186,184,.55)", textAlign: "center", minHeight: "14px" }}>
+        {labels[screen]}
+      </div>
+    </div>
+  );
 }
 
 /* ─── scroll reveal ─────────────────────────────────────────────────────────── */
@@ -436,6 +723,13 @@ export default function HomePage() {
   return (
     <div style={{ background: "var(--bg)", color: "var(--text)", fontFamily: "var(--font-sans,'IBM Plex Sans',system-ui,sans-serif)", position: "relative", overflowX: "hidden", WebkitFontSmoothing: "antialiased" }}>
 
+      {/* ── global ambient background blobs ─────────────────────────────── */}
+      <div aria-hidden="true" style={{ position: "fixed", inset: 0, zIndex: 0, overflow: "hidden", pointerEvents: "none" }}>
+        <div className="bcn-blob-1" style={{ position: "absolute", top: "-8%", left: "-6%", width: "52vw", height: "52vw", borderRadius: "50%", background: "radial-gradient(circle,rgba(59,130,246,.13) 0%,transparent 68%)", filter: "blur(55px)" }} />
+        <div className="bcn-blob-2" style={{ position: "absolute", top: "35%", right: "-12%", width: "46vw", height: "46vw", borderRadius: "50%", background: "radial-gradient(circle,rgba(34,211,238,.08) 0%,transparent 65%)", filter: "blur(60px)" }} />
+        <div className="bcn-blob-3" style={{ position: "absolute", bottom: "-5%", left: "22%", width: "44vw", height: "44vw", borderRadius: "50%", background: "radial-gradient(circle,rgba(99,102,241,.07) 0%,transparent 65%)", filter: "blur(60px)" }} />
+      </div>
+
       {/* ── NAV ──────────────────────────────────────────────────────────── */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px clamp(20px,5vw,56px)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", background: "rgba(5,8,10,.55)", borderBottom: "1px solid var(--line)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", ...heading, fontWeight: 600, fontSize: "18px", letterSpacing: "-.01em" }}>
@@ -451,7 +745,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════
           FOLD 1 · HERO
       ═══════════════════════════════════════════════════════════════════ */}
-      <section style={{ position: "relative", minHeight: "100svh", display: "flex", alignItems: "center", overflow: "hidden" }}>
+      <section style={{ position: "relative", zIndex: 1, minHeight: "100svh", display: "flex", alignItems: "center", overflow: "hidden" }}>
         <HeroCanvas />
         {/* gradient overlay */}
         <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(95deg,var(--bg) 4%,rgba(5,8,10,.72) 34%,rgba(5,8,10,0) 66%),linear-gradient(0deg,var(--bg) 1%,rgba(5,8,10,0) 26%)" }} />
@@ -490,9 +784,10 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════
           FOLD 2 · STORY
       ═══════════════════════════════════════════════════════════════════ */}
-      <section style={{ position: "relative", overflow: "hidden", padding: "clamp(90px,13vw,170px) clamp(20px,5vw,56px)" }}>
-        <div style={{ position: "absolute", top: "-120px", left: "-80px", width: "460px", height: "460px", borderRadius: "50%", background: "radial-gradient(circle,var(--accent),transparent 65%)", opacity: 0.1, filter: "blur(60px)", pointerEvents: "none" }} />
-        <div style={{ position: "relative", maxWidth: "880px", margin: "0 auto" }}>
+      <section style={{ position: "relative", zIndex: 1, overflow: "hidden", padding: "clamp(90px,13vw,170px) clamp(20px,5vw,56px)" }}>
+        <div style={{ position: "relative", maxWidth: "1200px", margin: "0 auto" }}>
+          <div className="story-grid">
+          <div> {/* left column */}
           <div data-reveal style={{ ...mono, fontSize: "14px", fontWeight: 500, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "22px" }}>Why I built this</div>
           <h2 data-reveal data-reveal-delay="60" style={{ ...heading, fontWeight: 700, fontSize: "clamp(2rem,4.6vw,3.5rem)", lineHeight: 1.05, letterSpacing: "-.025em", margin: 0, maxWidth: "18ch" }}>
             I was in{" "}
@@ -556,14 +851,19 @@ export default function HomePage() {
             <a href="https://en.wikipedia.org/wiki/Yercaud" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>Yercaud</a>
             {" "}· Shipped from Chennai
           </p>
+          </div> {/* end left column */}
+          {/* right column — phone mockup */}
+          <div className="phone-col">
+            <PhoneMockup />
+          </div>
+          </div> {/* end story-grid */}
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
           FOLD 3 · FEATURES
       ═══════════════════════════════════════════════════════════════════ */}
-      <section style={{ position: "relative", overflow: "hidden", background: "var(--bg2)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", padding: "clamp(90px,13vw,170px) clamp(20px,5vw,56px)" }}>
-        <div style={{ position: "absolute", bottom: "-140px", right: "-100px", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle,var(--accent2),transparent 65%)", opacity: 0.08, filter: "blur(70px)", pointerEvents: "none" }} />
+      <section style={{ position: "relative", zIndex: 1, overflow: "hidden", background: "rgba(10,18,22,0.75)", backdropFilter: "blur(2px)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", padding: "clamp(90px,13vw,170px) clamp(20px,5vw,56px)" }}>
         <div style={{ position: "relative", maxWidth: "1080px", margin: "0 auto" }}>
           <div data-reveal style={{ ...mono, fontSize: "14px", fontWeight: 500, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "20px" }}>What you get</div>
           <h2 data-reveal data-reveal-delay="60" style={{ ...heading, fontWeight: 700, fontSize: "clamp(2rem,4.6vw,3.5rem)", lineHeight: 1.04, letterSpacing: "-.025em", margin: 0 }}>
@@ -573,7 +873,7 @@ export default function HomePage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(420px,1fr))", gap: "18px", marginTop: "48px" }}>
             {/* Live scan */}
-            <div data-reveal data-reveal-delay="0" style={{ border: "1px solid var(--line)", borderRadius: "18px", background: "var(--panel)", overflow: "hidden" }}>
+            <div data-reveal data-reveal-delay="0" style={{ border: "1px solid rgba(255,255,255,.09)", borderRadius: "18px", background: "rgba(14,23,28,0.65)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", overflow: "hidden" }}>
               <ScanCanvas />
               <div style={{ padding: "24px 28px 30px" }}>
                 <div style={{ color: "var(--accent)" }}><IconWifi /></div>
@@ -582,7 +882,7 @@ export default function HomePage() {
               </div>
             </div>
             {/* Heatmap */}
-            <div data-reveal data-reveal-delay="90" style={{ border: "1px solid var(--line)", borderRadius: "18px", background: "var(--panel)", overflow: "hidden" }}>
+            <div data-reveal data-reveal-delay="90" style={{ border: "1px solid rgba(255,255,255,.09)", borderRadius: "18px", background: "rgba(14,23,28,0.65)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", overflow: "hidden" }}>
               <HeatCanvas />
               <div style={{ padding: "24px 28px 30px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -594,7 +894,7 @@ export default function HomePage() {
               </div>
             </div>
             {/* Recommendations */}
-            <div data-reveal data-reveal-delay="0" style={{ border: "1px solid var(--line)", borderRadius: "18px", background: "var(--panel)", overflow: "hidden" }}>
+            <div data-reveal data-reveal-delay="0" style={{ border: "1px solid rgba(255,255,255,.09)", borderRadius: "18px", background: "rgba(14,23,28,0.65)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", overflow: "hidden" }}>
               <RecoCanvas />
               <div style={{ padding: "24px 28px 30px" }}>
                 <div style={{ color: "var(--accent)" }}><IconSliders /></div>
@@ -603,7 +903,7 @@ export default function HomePage() {
               </div>
             </div>
             {/* Free */}
-            <div data-reveal data-reveal-delay="90" style={{ border: "1px solid rgba(59,130,246,.28)", borderRadius: "18px", background: "linear-gradient(160deg,rgba(59,130,246,.07),var(--panel) 55%)", overflow: "hidden" }}>
+            <div data-reveal data-reveal-delay="90" style={{ border: "1px solid rgba(59,130,246,.28)", borderRadius: "18px", background: "linear-gradient(160deg,rgba(59,130,246,.12),rgba(14,23,28,0.6) 55%)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", overflow: "hidden" }}>
               <FreeCanvas />
               <div style={{ padding: "24px 28px 30px" }}>
                 <div style={{ color: "var(--accent)" }}><IconNo /></div>
@@ -618,7 +918,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════
           FOLD 4 · CTA + FOOTER
       ═══════════════════════════════════════════════════════════════════ */}
-      <section style={{ position: "relative", overflow: "hidden", padding: "clamp(100px,15vw,190px) clamp(20px,5vw,56px) 0" }}>
+      <section style={{ position: "relative", zIndex: 1, overflow: "hidden", padding: "clamp(100px,15vw,190px) clamp(20px,5vw,56px) 0" }}>
         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-60%)", width: "760px", height: "760px", maxWidth: "130vw", borderRadius: "50%", background: "radial-gradient(circle,var(--accent),transparent 62%)", opacity: 0.1, filter: "blur(80px)", pointerEvents: "none" }} />
         <div style={{ position: "relative", maxWidth: "760px", margin: "0 auto", textAlign: "center" }}>
           <h2 data-reveal style={{ ...heading, fontWeight: 700, fontSize: "clamp(2.6rem,7vw,5rem)", lineHeight: 1, letterSpacing: "-.03em", margin: 0 }}>
