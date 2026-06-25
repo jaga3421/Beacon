@@ -49,7 +49,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.beacon.wifi.LocalSimpleMode
-import com.beacon.wifi.data.Band
 import com.beacon.wifi.data.WifiNetwork
 import com.beacon.wifi.ui.BeaconViewModel
 import com.beacon.wifi.ui.components.ChannelCurve
@@ -63,6 +62,7 @@ import com.beacon.wifi.ui.components.rssiColor
 import com.beacon.wifi.ui.components.scoreColor
 import com.beacon.wifi.ui.theme.BeaconTheme
 import com.beacon.wifi.ui.theme.BeaconThemeColors
+import kotlin.math.roundToInt
 
 private val FILTERS = listOf("All", "Secure", "Open", "Crowded")
 private val SORTS   = listOf("strength", "name", "channel")
@@ -109,6 +109,21 @@ fun ScannerScreen(vm: BeaconViewModel, modifier: Modifier = Modifier) {
                 color     = rssiColor(net.rssi),
                 emphasized = net.isCurrent,
             )
+        }
+    }
+    // Channels actually in use, and an x-range fitted to them so the curves
+    // spread across the full chart width instead of bunching to one side.
+    val channelsInUse = remember(ui.networks) {
+        ui.networks.map { it.channel }.distinct().sorted()
+    }
+    val chartRange = remember(channelsInUse) {
+        if (channelsInUse.isEmpty()) {
+            1f to 165f
+        } else {
+            val lo = channelsInUse.first().toFloat()
+            val hi = channelsInUse.last().toFloat()
+            val pad = ((hi - lo) * 0.12f).coerceAtLeast(2f)
+            (lo - pad) to (hi + pad)
         }
     }
 
@@ -215,19 +230,17 @@ fun ScannerScreen(vm: BeaconViewModel, modifier: Modifier = Modifier) {
                         }
                     } else {
                         ChannelOverlapChart(
-                            points    = curves,
-                            axisColor = colors.stroke,
-                            modifier  = Modifier.fillMaxWidth().height(140.dp),
+                            points     = curves,
+                            axisColor  = colors.stroke,
+                            minChannel = chartRange.first,
+                            maxChannel = chartRange.second,
+                            modifier   = Modifier.fillMaxWidth().height(140.dp),
                         )
-                        // Channel axis labels (technical mode only)
-                        if (!simpleMode) {
-                            val band = ui.connected?.band ?: Band.GHZ_5
-                            val axisLabels = when (band) {
-                                Band.GHZ_24 -> listOf("1", "6", "11")
-                                Band.GHZ_5  -> listOf("36", "48", "64", "100", "132", "153")
-                                Band.GHZ_6  -> listOf("1", "33", "65", "97", "129", "161")
-                                Band.UNKNOWN -> listOf("1", "6", "11")
-                            }
+                        // Channel axis labels (technical mode only) — only the
+                        // channels actually in use, so no space is wasted on
+                        // empty channel numbers.
+                        if (!simpleMode && channelsInUse.isNotEmpty()) {
+                            val axisLabels = axisChannelLabels(channelsInUse)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -320,6 +333,16 @@ fun ScannerScreen(vm: BeaconViewModel, modifier: Modifier = Modifier) {
             }
         }
     }
+}
+
+/**
+ * Picks at most [max] channel labels from the sorted [channels] in use, sampling
+ * evenly by index so a crowded band stays readable without dropping the extremes.
+ */
+private fun axisChannelLabels(channels: List<Int>, max: Int = 7): List<Int> {
+    if (channels.size <= max) return channels
+    val step = (channels.size - 1).toFloat() / (max - 1)
+    return (0 until max).map { channels[(it * step).roundToInt()] }.distinct()
 }
 
 // ── Network card (expandable) ────────────────────────────────────────────────

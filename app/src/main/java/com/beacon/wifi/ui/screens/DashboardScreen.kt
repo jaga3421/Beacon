@@ -172,28 +172,31 @@ fun DashboardScreen(
                 }
             }
 
-            // 3) Row of 3 stat cards
+            // 3) Row of 3 stat cards — equal height via IntrinsicSize so the
+            //    CHANNEL card (which can lack a unit line) matches its siblings.
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 StatCard(
                     label = "HEALTH",
                     value = "${ui.score}",
                     unit = "/100",
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
                 StatCard(
                     label = "BAND",
                     value = ui.connected.band.label,
                     unit = if (simpleMode && ui.connected.band.label == "5 GHz") "faster" else if (simpleMode && ui.connected.band.label == "2.4 GHz") "longer range" else null,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
                 StatCard(
                     label = if (simpleMode) "CHANNEL" else "CHANNEL",
                     value = if (simpleMode) (if (ui.coChannel < 4) "Clear" else "Busy") else "${ui.connected.channel}",
                     unit = if (simpleMode) null else if (ui.coChannel < 4) "clear" else "busy",
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
             }
 
@@ -309,7 +312,11 @@ private fun StatCard(
         modifier = modifier,
         padding = PaddingValues(12.dp),
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+        ) {
             Mono(
                 text = label,
                 color = c.textTertiary,
