@@ -811,42 +811,7 @@ export default function HomePage() {
             "The signal data is yours. You should not have to pay to see it."
           </blockquote>
 
-          {/* contrast cards */}
-          <div data-reveal style={{ ...mono, fontSize: "14px", fontWeight: 500, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--muted)", margin: "64px 0 18px" }}>The difference</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: "18px" }}>
-            {/* every other app */}
-            <div data-reveal data-reveal-delay="0" style={{ border: "1px solid var(--line)", borderRadius: "18px", overflow: "hidden", background: "#0b0d0e", filter: "grayscale(.35)" }}>
-              <div style={{ background: "linear-gradient(90deg,#f59e0b,#ef4444)", color: "#1a0b00", ...mono, fontSize: "11px", fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", textAlign: "center", padding: "8px" }}>AD · Install Now</div>
-              <div style={{ padding: "30px 26px 32px", position: "relative" }}>
-                <div style={{ ...mono, fontSize: "11px", letterSpacing: ".1em", textTransform: "uppercase", color: "#5d6a6a" }}>Signal strength</div>
-                <div style={{ ...heading, fontSize: "3rem", fontWeight: 700, color: "#9aa6a6", filter: "blur(7px)", marginTop: "8px", userSelect: "none" }}>54 dBm</div>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginTop: "18px", ...mono, fontSize: "12px", color: "#cdd6d6", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", padding: "8px 13px", borderRadius: "9px" }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-                  Upgrade · 500 / yr
-                </div>
-              </div>
-              <div style={{ padding: "14px 26px 22px", ...mono, fontSize: "11px", letterSpacing: ".14em", textTransform: "uppercase", color: "#5d6a6a", borderTop: "1px solid rgba(255,255,255,.05)" }}>Every other app</div>
-            </div>
-            {/* beacon */}
-            <div data-reveal data-reveal-delay="110" style={{ border: "1px solid rgba(59,130,246,.3)", borderRadius: "18px", overflow: "hidden", background: "var(--panel)", boxShadow: "0 0 50px rgba(59,130,246,.08)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "9px", ...mono, fontSize: "11px", fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--accent)", padding: "9px 16px", borderBottom: "1px solid var(--line)" }}>
-                <span className="bcn-blink" style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--accent)" }} />Live
-              </div>
-              <div style={{ padding: "30px 26px 32px" }}>
-                <div style={{ ...mono, fontSize: "11px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)" }}>Signal strength</div>
-                <div style={{ ...heading, fontSize: "3rem", fontWeight: 700, color: "var(--accent)", marginTop: "8px", textShadow: "0 0 28px rgba(59,130,246,.4)" }}>52 dBm</div>
-                <div style={{ display: "flex", alignItems: "flex-end", gap: "5px", height: "34px", marginTop: "18px" }}>
-                  {[35, 55, 78, 100, 62].map((h, i) => (
-                    <span key={i} style={{ width: "9px", height: `${h}%`, background: i < 4 ? "var(--accent)" : "rgba(59,130,246,.25)", borderRadius: "2px", opacity: i < 4 ? 0.85 : 1 }} />
-                  ))}
-                </div>
-                <div style={{ ...mono, fontSize: "12.5px", color: "var(--text)", marginTop: "16px" }}>Channel 11 · <span style={{ color: "var(--accent)" }}>least crowded</span></div>
-              </div>
-              <div style={{ padding: "14px 26px 22px", ...mono, fontSize: "11px", letterSpacing: ".14em", textTransform: "uppercase", color: "var(--accent)", borderTop: "1px solid var(--line)" }}>Beacon · free</div>
-            </div>
-          </div>
-
-          <p data-reveal style={{ ...mono, fontSize: "12px", letterSpacing: ".05em", color: "var(--muted)", margin: "30px 0 0" }}>
+          <p data-reveal style={{ ...mono, fontSize: "12px", letterSpacing: ".05em", color: "var(--muted)", margin: "54px 0 0" }}>
             Born in{" "}
             <a href="https://en.wikipedia.org/wiki/Yercaud" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>Yercaud</a>
             {" "}· Shipped from Chennai
