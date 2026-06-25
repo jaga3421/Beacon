@@ -658,7 +658,7 @@ function IosModal({ onClose }: { onClose: () => void }) {
         <div style={{ fontSize: "32px", marginBottom: "14px" }}></div>
         <h3 style={{ fontFamily: "var(--font-space,'Space Grotesk',sans-serif)", fontWeight: 700, fontSize: "1.3rem", color: "var(--text)", margin: "0 0 10px" }}>Android only, for now</h3>
         <p style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
-          Beacon is currently available for Android only. iOS version is coming soon.
+          An iOS version is on the way. For now, Beacon runs on Android.
         </p>
         <button onClick={onClose} style={{ marginTop: "22px", fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "12px", letterSpacing: ".06em", color: "var(--muted)", background: "none", border: "1px solid var(--line)", borderRadius: "8px", padding: "8px 20px", cursor: "pointer" }}>Got it</button>
       </div>
@@ -756,11 +756,11 @@ export default function HomePage() {
               Free · Open Source · No Ads
             </div>
             <h1 data-reveal data-reveal-delay="90" style={{ ...heading, fontWeight: 700, fontSize: "clamp(2.9rem,7.5vw,6rem)", lineHeight: 0.97, letterSpacing: "-.03em", margin: "26px 0 0", color: "var(--text)" }}>
-              Your WiFi.<br />Finally <span style={{ color: "var(--accent)" }}>clear.</span>
+              Know your WiFi.<br />Fix your <span style={{ color: "var(--accent)" }}>signal.</span>
             </h1>
             <p data-reveal data-reveal-delay="170" style={{ fontSize: "clamp(1.05rem,1.7vw,1.3rem)", lineHeight: 1.55, color: "var(--muted)", maxWidth: "520px", margin: "24px 0 0" }}>
-              Signal strength, channel congestion, and smart fixes, in real time, with{" "}
-              <span style={{ color: "var(--text)", fontWeight: 500 }}>zero ads</span> and{" "}
+              Beacon shows your real signal strength, finds the least-crowded channel, and tells you how to fix weak spots — live, with{" "}
+              <span style={{ color: "var(--text)", fontWeight: 500 }}>no ads</span> and{" "}
               <span style={{ color: "var(--text)", fontWeight: 500 }}>no paywall.</span>
             </p>
             <div data-reveal data-reveal-delay="250" style={{ display: "flex", flexWrap: "wrap", gap: "13px", margin: "36px 0 0" }}>
@@ -796,14 +796,14 @@ export default function HomePage() {
           </h2>
           <div style={{ display: "grid", gap: "22px", marginTop: "34px", maxWidth: "620px" }}>
             <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
-              Yercaud is a hill station in Tamil Nadu. Beautiful place to live and work from, but the hilly terrain means weak, patchy signal. I kept moving my desk around, and when I go to coffee shops in Chennai, some have great WiFi and some are terrible.
+              Yercaud is a hill station in Tamil Nadu — a beautiful place to live and work from, but the hilly terrain leaves the signal weak and patchy. I kept dragging my desk around the house chasing a better connection. Coffee shops in Chennai were hit or miss too: some had great WiFi, some were unusable.
             </p>
             <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
-              Every free analyser I tried was the same. Open it, eat a full-screen ad. Dismiss it, and the signal values are blurred, <span style={{ color: "var(--text)" }}>"upgrade to see real numbers."</span> Tap upgrade: 500 a year for a number that is already yours.
+              Every free analyser I tried was the same. Open it, sit through a full-screen ad. Close the ad, and the signal values sit blurred behind <span style={{ color: "var(--text)" }}>"upgrade to see real numbers."</span> Tap upgrade: ₹500 a year for a number that's already yours.
             </p>
             <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
-              So I built Beacon over a weekend. Signal strength, frequency, channel overlap, co-channel neighbours, all of it, with no ads and no paywall.{" "}
-              <span style={{ color: "var(--text)", fontWeight: 500 }}>It always will be.</span>
+              So I built Beacon over a weekend. Signal strength, frequency, channel overlap, co-channel neighbours — all of it.{" "}
+              <span style={{ color: "var(--text)", fontWeight: 500 }}>No ads, no paywall, and it always will be.</span>
             </p>
           </div>
 
@@ -864,7 +864,7 @@ export default function HomePage() {
               <div style={{ padding: "24px 28px 30px" }}>
                 <div style={{ color: "var(--accent)" }}><IconSliders /></div>
                 <h3 style={{ ...heading, fontWeight: 600, fontSize: "1.3rem", letterSpacing: "-.01em", margin: "18px 0 0" }}>Smart recommendations</h3>
-                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>Beacon reads your channel neighbours and gives specific actions, switch to channel 11, move the router, change band. Your actual situation, not generic tips.</p>
+                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>Beacon reads your channel neighbours and gives specific actions: switch to channel 11, move the router, change band. Your actual situation, not generic tips.</p>
               </div>
             </div>
             {/* Free */}
@@ -873,7 +873,7 @@ export default function HomePage() {
               <div style={{ padding: "24px 28px 30px" }}>
                 <div style={{ color: "var(--accent)" }}><IconNo /></div>
                 <h3 style={{ ...heading, fontWeight: 600, fontSize: "1.3rem", letterSpacing: "-.01em", margin: "18px 0 0" }}>Zero ads. Zero paywall.</h3>
-                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>No banners, no interstitials, no values blurred behind a subscription. Download it, use it, that is it. Open source, read every line.</p>
+                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>No banners, no interstitials, no values blurred behind a subscription. Download it, use it, that's it. Open source — read every line.</p>
               </div>
             </div>
           </div>
@@ -897,7 +897,7 @@ export default function HomePage() {
             <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" style={{ ...btnGhost, padding: "16px 26px" }}>View source</a>
           </div>
           <p data-reveal data-reveal-delay="240" style={{ ...mono, fontSize: "12.5px", letterSpacing: ".05em", color: "var(--muted)", margin: "20px 0 4px" }}>
-            Android 7.0 · ~16 MB · No account, no tracking
+            Android 7.0+ · ~16 MB · No account, no tracking
           </p>
           <p data-reveal style={{ ...mono, fontSize: "11px", letterSpacing: ".04em", color: "rgba(166,186,184,.5)", margin: 0 }}>
             v{VERSION} · Play Store listing coming soon
