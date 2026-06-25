@@ -8,8 +8,8 @@ const ibmPlexMono  = IBM_Plex_Mono ({ subsets: ["latin"], weight: ["400","500"],
 
 const SITE_URL  = "https://beacon-wifi.app";
 const SITE_NAME = "Beacon WiFi Analyzer";
-const TITLE     = "Beacon — Free WiFi Analyzer for Android. No Ads, No Paywall.";
-const DESC      = "Beacon scans nearby WiFi networks, shows live signal strength, finds dead zones, and gives personalised channel fixes — completely free, forever. No ads, no subscription, no account. Open source.";
+const TITLE     = "Beacon: Free WiFi Analyzer for Android. No Ads, No Paywall.";
+const DESC      = "Beacon scans nearby WiFi networks, shows live signal strength, finds dead zones, and gives personalised channel fixes. Free forever, no ads, no account. Open source.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -56,16 +56,16 @@ export const metadata: Metadata = {
     locale:      "en_IN",
     url:         "/",
     siteName:    SITE_NAME,
-    title:       "Beacon — Free WiFi Analyzer. No Ads, No Paywall.",
-    description: "See your WiFi clearly. Signal strength, dead zones, crowded channels, and smart fixes — completely free. Open source Android app.",
+    title:       "Beacon: Free WiFi Analyzer. No Ads, No Paywall.",
+    description: "See your WiFi clearly. Get signal strength, dead zones, crowded channels, and smart fixes for free. Open source Android app.",
     // OG image is auto-discovered from app/opengraph-image.tsx
   },
 
   /* ── Twitter / X card ─────────────────────────────────────────────────── */
   twitter: {
     card:        "summary_large_image",
-    title:       "Beacon — Free WiFi Analyzer. No Ads, No Paywall.",
-    description: "See your WiFi clearly. Find dead zones, crowded channels, and the best spots — completely free. Open source for Android.",
+    title:       "Beacon: Free WiFi Analyzer. No Ads, No Paywall.",
+    description: "See your WiFi clearly. Find dead zones, crowded channels, and the best spots for free. Open source for Android.",
     creator:     "@jagadeesh_jkp",
     // Twitter image is auto-discovered from app/twitter-image.tsx (falls back to OG)
   },

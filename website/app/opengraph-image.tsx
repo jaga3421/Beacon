@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const size        = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt         = "Beacon — Free WiFi Analyzer for Android";
+export const alt         = "Beacon: Free WiFi Analyzer for Android";
 
 const BLUE = "#3B82F6";
 const BG   = "#05080a";
@@ -68,14 +68,14 @@ export default async function OgImage() {
         fontFamily: font ? "'Space Grotesk'" : "system-ui, sans-serif",
       }}
     >
-      {/* background glow — top-left */}
+      {/* background glow, top-left */}
       <div style={{
         position: "absolute", top: -120, left: -80,
         width: 520, height: 520, borderRadius: "50%",
         background: `radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%)`,
         display: "flex",
       }} />
-      {/* background glow — bottom-right */}
+      {/* background glow, bottom-right */}
       <div style={{
         position: "absolute", bottom: -180, right: 80,
         width: 600, height: 600, borderRadius: "50%",
@@ -124,7 +124,7 @@ export default async function OgImage() {
           color: MUTE, maxWidth: 480,
           display: "flex",
         }}>
-          Signal strength, channel congestion, smart fixes — in real time. No ads. No paywall. Always free.
+          Signal strength, channel congestion, and smart fixes in real time. Free, with no ads and no paywall.
         </div>
 
         {/* pills */}

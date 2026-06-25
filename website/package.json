@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/check-copy.mjs",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "check:copy": "node scripts/check-copy.mjs"
   },
   "dependencies": {
     "next": "16.2.9",

@@ -470,7 +470,7 @@ function PhoneMockup() {
       <div style={{ margin: "10px 10px 8px", background: "rgba(59,130,246,.12)", border: "1px solid rgba(59,130,246,.3)", borderRadius: "10px", padding: "10px 12px" }}>
         <div style={{ fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "8.5px", letterSpacing: ".14em", textTransform: "uppercase", color: "rgba(59,130,246,.8)", marginBottom: "4px" }}>Recommendation</div>
         <div style={{ fontFamily: "var(--font-space,'Space Grotesk',sans-serif)", fontWeight: 700, fontSize: "14px", color: "#3B82F6" }}>Switch to Channel 11</div>
-        <div style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "10px", color: "rgba(166,186,184,.8)", marginTop: "2px" }}>Least congested — 0 competing networks</div>
+        <div style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "10px", color: "rgba(166,186,184,.8)", marginTop: "2px" }}>Least congested, 0 competing networks</div>
       </div>
       {/* channel bars */}
       <div style={{ padding: "0 12px", display: "flex", flexDirection: "column", gap: "7px" }}>
@@ -756,10 +756,10 @@ export default function HomePage() {
               Free · Open Source · No Ads
             </div>
             <h1 data-reveal data-reveal-delay="90" style={{ ...heading, fontWeight: 700, fontSize: "clamp(2.9rem,7.5vw,6rem)", lineHeight: 0.97, letterSpacing: "-.03em", margin: "26px 0 0", color: "var(--text)" }}>
-              Know your WiFi.<br />Fix your <span style={{ color: "var(--accent)" }}>signal.</span>
+              See your WiFi.<br />Fix your <span style={{ color: "var(--accent)" }}>signal.</span>
             </h1>
             <p data-reveal data-reveal-delay="170" style={{ fontSize: "clamp(1.05rem,1.7vw,1.3rem)", lineHeight: 1.55, color: "var(--muted)", maxWidth: "520px", margin: "24px 0 0" }}>
-              Beacon shows your real signal strength, finds the least-crowded channel, and tells you how to fix weak spots — live, with{" "}
+              Beacon shows your real signal strength, finds the least-crowded channel, and tells you how to fix weak spots in real time, with{" "}
               <span style={{ color: "var(--text)", fontWeight: 500 }}>no ads</span> and{" "}
               <span style={{ color: "var(--text)", fontWeight: 500 }}>no paywall.</span>
             </p>
@@ -796,28 +796,29 @@ export default function HomePage() {
           </h2>
           <div style={{ display: "grid", gap: "22px", marginTop: "34px", maxWidth: "620px" }}>
             <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
-              Yercaud is a hill station in Tamil Nadu — a beautiful place to live and work from, but the hilly terrain leaves the signal weak and patchy. I kept dragging my desk around the house chasing a better connection. Coffee shops in Chennai were hit or miss too: some had great WiFi, some were unusable.
+              Yercaud is a hill station in Tamil Nadu. It is a beautiful place to live and work from, but the hilly terrain leaves the signal weak and patchy. I kept dragging my desk around the house chasing a better connection. Coffee shops in Chennai were hit or miss too: some had great WiFi, some were unusable.
             </p>
             <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
-              Every free analyser I tried was the same. Open it, sit through a full-screen ad. Close the ad, and the signal values sit blurred behind <span style={{ color: "var(--text)" }}>"upgrade to see real numbers."</span> Tap upgrade: ₹500 a year for a number that's already yours.
+              A WiFi analyser is the right tool for this. It shows you where the signal drops and which channels are jammed. But every free one I tried played the same game: open it, sit through a full-screen ad, then find the real numbers blurred behind <span style={{ color: "var(--text)" }}>&ldquo;upgrade to see real numbers.&rdquo;</span> The upgrade ran ₹500 a year, to read a value that was already mine.
             </p>
             <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
-              So I built Beacon over a weekend. Signal strength, frequency, channel overlap, co-channel neighbours — all of it.{" "}
+              So I built Beacon over a weekend. Signal strength, frequency, channel overlap, co-channel neighbours. All of it.{" "}
               <span style={{ color: "var(--text)", fontWeight: 500 }}>No ads, no paywall, and it always will be.</span>
             </p>
           </div>
 
-          <blockquote data-reveal style={{ ...heading, fontWeight: 500, fontSize: "clamp(1.5rem,3.3vw,2.4rem)", lineHeight: 1.25, letterSpacing: "-.02em", color: "var(--text)", borderLeft: "2px solid var(--accent)", padding: "6px 0 6px 26px", margin: "54px 0 0", maxWidth: "20ch" }}>
-            "The signal data is yours. You should not have to pay to see it."
+          <blockquote data-reveal style={{ position: "relative", margin: "56px 0 0", maxWidth: "24ch" }}>
+            <span aria-hidden="true" style={{ ...heading, display: "block", fontSize: "clamp(3rem,6vw,4.4rem)", lineHeight: 0.7, color: "var(--accent)", opacity: 0.5 }}>&ldquo;</span>
+            <p style={{ ...heading, fontWeight: 500, fontSize: "clamp(1.55rem,3.4vw,2.5rem)", lineHeight: 1.28, letterSpacing: "-.02em", color: "var(--text)", margin: "6px 0 0" }}>
+              The signal data is yours. You should not have to pay to see it.
+            </p>
+            <div style={{ ...mono, fontSize: "11.5px", letterSpacing: ".14em", textTransform: "uppercase", color: "var(--muted)", marginTop: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ width: "26px", height: "1px", background: "var(--accent)", display: "inline-block" }} />
+              Why Beacon is free
+            </div>
           </blockquote>
-
-          <p data-reveal style={{ ...mono, fontSize: "12px", letterSpacing: ".05em", color: "var(--muted)", margin: "54px 0 0" }}>
-            Born in{" "}
-            <a href="https://en.wikipedia.org/wiki/Yercaud" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>Yercaud</a>
-            {" "}· Shipped from Chennai
-          </p>
           </div> {/* end left column */}
-          {/* right column — phone mockup */}
+          {/* right column: phone mockup */}
           <div className="phone-col">
             <PhoneMockup />
           </div>
@@ -873,7 +874,7 @@ export default function HomePage() {
               <div style={{ padding: "24px 28px 30px" }}>
                 <div style={{ color: "var(--accent)" }}><IconNo /></div>
                 <h3 style={{ ...heading, fontWeight: 600, fontSize: "1.3rem", letterSpacing: "-.01em", margin: "18px 0 0" }}>Zero ads. Zero paywall.</h3>
-                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>No banners, no interstitials, no values blurred behind a subscription. Download it, use it, that's it. Open source — read every line.</p>
+                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>No banners, no interstitials, and nothing blurred behind a subscription. You download it and you use it. It is open source, so you can read every line.</p>
               </div>
             </div>
           </div>
@@ -881,9 +882,9 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          FOLD 4 · CTA + FOOTER
+          FOLD 4 · CTA
       ═══════════════════════════════════════════════════════════════════ */}
-      <section style={{ position: "relative", zIndex: 1, overflow: "hidden", padding: "clamp(100px,15vw,190px) clamp(20px,5vw,56px) 0" }}>
+      <section style={{ position: "relative", zIndex: 1, overflow: "hidden", padding: "clamp(100px,15vw,190px) clamp(20px,5vw,56px) clamp(96px,13vw,150px)" }}>
         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-60%)", width: "760px", height: "760px", maxWidth: "130vw", borderRadius: "50%", background: "radial-gradient(circle,var(--accent),transparent 62%)", opacity: 0.1, filter: "blur(80px)", pointerEvents: "none" }} />
         <div style={{ position: "relative", maxWidth: "760px", margin: "0 auto", textAlign: "center" }}>
           <h2 data-reveal style={{ ...heading, fontWeight: 700, fontSize: "clamp(2.6rem,7vw,5rem)", lineHeight: 1, letterSpacing: "-.03em", margin: 0 }}>
@@ -904,17 +905,32 @@ export default function HomePage() {
           </p>
         </div>
 
-        <footer style={{ position: "relative", maxWidth: "1080px", margin: "clamp(90px,13vw,150px) auto 0", padding: "32px 0", borderTop: "1px solid var(--line)", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "18px" }}>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          FOOTER · full-width
+      ═══════════════════════════════════════════════════════════════════ */}
+      <footer style={{ position: "relative", zIndex: 1, width: "100%", borderTop: "1px solid var(--line)", background: "rgba(5,8,10,.55)", padding: "34px clamp(20px,5vw,56px)" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "16px 28px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "11px", ...heading, fontWeight: 600, fontSize: "16px" }}>
             <span style={{ width: "9px", height: "9px", borderRadius: "50%", background: "var(--accent)", boxShadow: "0 0 12px var(--accent)" }} />
-            Beacon <span style={{ ...mono, fontWeight: 400, fontSize: "12.5px", color: "var(--muted)", marginLeft: "4px" }}>· Built by <a href="https://jagadee.sh" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline", textDecorationColor: "rgba(166,186,184,.35)", textUnderlineOffset: "3px" }}>Jagadee.sh</a></span>
+            Beacon
+            <span style={{ ...mono, fontWeight: 400, fontSize: "12.5px", color: "var(--muted)", marginLeft: "2px" }}>
+              Built by{" "}
+              <a href="https://jagadee.sh" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline", textDecorationColor: "rgba(166,186,184,.35)", textUnderlineOffset: "3px" }}>Jagadee.sh</a>
+            </span>
           </div>
-          <div style={{ ...mono, fontSize: "12px", letterSpacing: ".04em", color: "var(--muted)", textAlign: "right" }}>
-            Free forever. No ads. No account. No excuses.<br />
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px 14px", ...mono, fontSize: "12px", letterSpacing: ".04em", color: "var(--muted)" }}>
+            <span>
+              Born in{" "}
+              <a href="https://en.wikipedia.org/wiki/Yercaud" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>Yercaud</a>
+              {" "}· Shipped from Chennai
+            </span>
+            <span aria-hidden="true" style={{ opacity: 0.35 }}>·</span>
             <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>Open source on GitHub</a>
           </div>
-        </footer>
-      </section>
+        </div>
+      </footer>
 
     </div>
   );
