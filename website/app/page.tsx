@@ -658,7 +658,7 @@ function IosModal({ onClose }: { onClose: () => void }) {
         <div style={{ fontSize: "32px", marginBottom: "14px" }}></div>
         <h3 style={{ fontFamily: "var(--font-space,'Space Grotesk',sans-serif)", fontWeight: 700, fontSize: "1.3rem", color: "var(--text)", margin: "0 0 10px" }}>Android only, for now</h3>
         <p style={{ fontFamily: "var(--font-sans,'IBM Plex Sans',sans-serif)", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
-          Beacon is currently available for Android only. iOS version is coming soon.
+          An iOS version is on the way. For now, Beacon runs on Android.
         </p>
         <button onClick={onClose} style={{ marginTop: "22px", fontFamily: "var(--font-mono,'IBM Plex Mono',monospace)", fontSize: "12px", letterSpacing: ".06em", color: "var(--muted)", background: "none", border: "1px solid var(--line)", borderRadius: "8px", padding: "8px 20px", cursor: "pointer" }}>Got it</button>
       </div>
@@ -756,11 +756,11 @@ export default function HomePage() {
               Free · Open Source · No Ads
             </div>
             <h1 data-reveal data-reveal-delay="90" style={{ ...heading, fontWeight: 700, fontSize: "clamp(2.9rem,7.5vw,6rem)", lineHeight: 0.97, letterSpacing: "-.03em", margin: "26px 0 0", color: "var(--text)" }}>
-              Your WiFi.<br />Finally <span style={{ color: "var(--accent)" }}>clear.</span>
+              Know your WiFi.<br />Fix your <span style={{ color: "var(--accent)" }}>signal.</span>
             </h1>
             <p data-reveal data-reveal-delay="170" style={{ fontSize: "clamp(1.05rem,1.7vw,1.3rem)", lineHeight: 1.55, color: "var(--muted)", maxWidth: "520px", margin: "24px 0 0" }}>
-              Signal strength, channel congestion, and smart fixes, in real time, with{" "}
-              <span style={{ color: "var(--text)", fontWeight: 500 }}>zero ads</span> and{" "}
+              Beacon shows your real signal strength, finds the least-crowded channel, and tells you how to fix weak spots — live, with{" "}
+              <span style={{ color: "var(--text)", fontWeight: 500 }}>no ads</span> and{" "}
               <span style={{ color: "var(--text)", fontWeight: 500 }}>no paywall.</span>
             </p>
             <div data-reveal data-reveal-delay="250" style={{ display: "flex", flexWrap: "wrap", gap: "13px", margin: "36px 0 0" }}>
@@ -796,14 +796,14 @@ export default function HomePage() {
           </h2>
           <div style={{ display: "grid", gap: "22px", marginTop: "34px", maxWidth: "620px" }}>
             <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
-              Yercaud is a hill station in Tamil Nadu. Beautiful place to live and work from, but the hilly terrain means weak, patchy signal. I kept moving my desk around, and when I go to coffee shops in Chennai, some have great WiFi and some are terrible.
+              Yercaud is a hill station in Tamil Nadu — a beautiful place to live and work from, but the hilly terrain leaves the signal weak and patchy. I kept dragging my desk around the house chasing a better connection. Coffee shops in Chennai were hit or miss too: some had great WiFi, some were unusable.
             </p>
             <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
-              Every free analyser I tried was the same. Open it, eat a full-screen ad. Dismiss it, and the signal values are blurred, <span style={{ color: "var(--text)" }}>"upgrade to see real numbers."</span> Tap upgrade: 500 a year for a number that is already yours.
+              Every free analyser I tried was the same. Open it, sit through a full-screen ad. Close the ad, and the signal values sit blurred behind <span style={{ color: "var(--text)" }}>"upgrade to see real numbers."</span> Tap upgrade: ₹500 a year for a number that's already yours.
             </p>
             <p data-reveal data-reveal-delay="40" style={{ fontSize: "1.12rem", lineHeight: 1.65, color: "var(--muted)", margin: 0 }}>
-              So I built Beacon over a weekend. Signal strength, frequency, channel overlap, co-channel neighbours, all of it, with no ads and no paywall.{" "}
-              <span style={{ color: "var(--text)", fontWeight: 500 }}>It always will be.</span>
+              So I built Beacon over a weekend. Signal strength, frequency, channel overlap, co-channel neighbours — all of it.{" "}
+              <span style={{ color: "var(--text)", fontWeight: 500 }}>No ads, no paywall, and it always will be.</span>
             </p>
           </div>
 
@@ -811,42 +811,7 @@ export default function HomePage() {
             "The signal data is yours. You should not have to pay to see it."
           </blockquote>
 
-          {/* contrast cards */}
-          <div data-reveal style={{ ...mono, fontSize: "14px", fontWeight: 500, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--muted)", margin: "64px 0 18px" }}>The difference</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: "18px" }}>
-            {/* every other app */}
-            <div data-reveal data-reveal-delay="0" style={{ border: "1px solid var(--line)", borderRadius: "18px", overflow: "hidden", background: "#0b0d0e", filter: "grayscale(.35)" }}>
-              <div style={{ background: "linear-gradient(90deg,#f59e0b,#ef4444)", color: "#1a0b00", ...mono, fontSize: "11px", fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", textAlign: "center", padding: "8px" }}>AD · Install Now</div>
-              <div style={{ padding: "30px 26px 32px", position: "relative" }}>
-                <div style={{ ...mono, fontSize: "11px", letterSpacing: ".1em", textTransform: "uppercase", color: "#5d6a6a" }}>Signal strength</div>
-                <div style={{ ...heading, fontSize: "3rem", fontWeight: 700, color: "#9aa6a6", filter: "blur(7px)", marginTop: "8px", userSelect: "none" }}>54 dBm</div>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginTop: "18px", ...mono, fontSize: "12px", color: "#cdd6d6", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", padding: "8px 13px", borderRadius: "9px" }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-                  Upgrade · 500 / yr
-                </div>
-              </div>
-              <div style={{ padding: "14px 26px 22px", ...mono, fontSize: "11px", letterSpacing: ".14em", textTransform: "uppercase", color: "#5d6a6a", borderTop: "1px solid rgba(255,255,255,.05)" }}>Every other app</div>
-            </div>
-            {/* beacon */}
-            <div data-reveal data-reveal-delay="110" style={{ border: "1px solid rgba(59,130,246,.3)", borderRadius: "18px", overflow: "hidden", background: "var(--panel)", boxShadow: "0 0 50px rgba(59,130,246,.08)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "9px", ...mono, fontSize: "11px", fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--accent)", padding: "9px 16px", borderBottom: "1px solid var(--line)" }}>
-                <span className="bcn-blink" style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--accent)" }} />Live
-              </div>
-              <div style={{ padding: "30px 26px 32px" }}>
-                <div style={{ ...mono, fontSize: "11px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)" }}>Signal strength</div>
-                <div style={{ ...heading, fontSize: "3rem", fontWeight: 700, color: "var(--accent)", marginTop: "8px", textShadow: "0 0 28px rgba(59,130,246,.4)" }}>52 dBm</div>
-                <div style={{ display: "flex", alignItems: "flex-end", gap: "5px", height: "34px", marginTop: "18px" }}>
-                  {[35, 55, 78, 100, 62].map((h, i) => (
-                    <span key={i} style={{ width: "9px", height: `${h}%`, background: i < 4 ? "var(--accent)" : "rgba(59,130,246,.25)", borderRadius: "2px", opacity: i < 4 ? 0.85 : 1 }} />
-                  ))}
-                </div>
-                <div style={{ ...mono, fontSize: "12.5px", color: "var(--text)", marginTop: "16px" }}>Channel 11 · <span style={{ color: "var(--accent)" }}>least crowded</span></div>
-              </div>
-              <div style={{ padding: "14px 26px 22px", ...mono, fontSize: "11px", letterSpacing: ".14em", textTransform: "uppercase", color: "var(--accent)", borderTop: "1px solid var(--line)" }}>Beacon · free</div>
-            </div>
-          </div>
-
-          <p data-reveal style={{ ...mono, fontSize: "12px", letterSpacing: ".05em", color: "var(--muted)", margin: "30px 0 0" }}>
+          <p data-reveal style={{ ...mono, fontSize: "12px", letterSpacing: ".05em", color: "var(--muted)", margin: "54px 0 0" }}>
             Born in{" "}
             <a href="https://en.wikipedia.org/wiki/Yercaud" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>Yercaud</a>
             {" "}· Shipped from Chennai
@@ -899,7 +864,7 @@ export default function HomePage() {
               <div style={{ padding: "24px 28px 30px" }}>
                 <div style={{ color: "var(--accent)" }}><IconSliders /></div>
                 <h3 style={{ ...heading, fontWeight: 600, fontSize: "1.3rem", letterSpacing: "-.01em", margin: "18px 0 0" }}>Smart recommendations</h3>
-                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>Beacon reads your channel neighbours and gives specific actions, switch to channel 11, move the router, change band. Your actual situation, not generic tips.</p>
+                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>Beacon reads your channel neighbours and gives specific actions: switch to channel 11, move the router, change band. Your actual situation, not generic tips.</p>
               </div>
             </div>
             {/* Free */}
@@ -908,7 +873,7 @@ export default function HomePage() {
               <div style={{ padding: "24px 28px 30px" }}>
                 <div style={{ color: "var(--accent)" }}><IconNo /></div>
                 <h3 style={{ ...heading, fontWeight: 600, fontSize: "1.3rem", letterSpacing: "-.01em", margin: "18px 0 0" }}>Zero ads. Zero paywall.</h3>
-                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>No banners, no interstitials, no values blurred behind a subscription. Download it, use it, that is it. Open source, read every line.</p>
+                <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--muted)", margin: "12px 0 0" }}>No banners, no interstitials, no values blurred behind a subscription. Download it, use it, that's it. Open source — read every line.</p>
               </div>
             </div>
           </div>
@@ -932,7 +897,7 @@ export default function HomePage() {
             <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" style={{ ...btnGhost, padding: "16px 26px" }}>View source</a>
           </div>
           <p data-reveal data-reveal-delay="240" style={{ ...mono, fontSize: "12.5px", letterSpacing: ".05em", color: "var(--muted)", margin: "20px 0 4px" }}>
-            Android 7.0 · ~16 MB · No account, no tracking
+            Android 7.0+ · ~16 MB · No account, no tracking
           </p>
           <p data-reveal style={{ ...mono, fontSize: "11px", letterSpacing: ".04em", color: "rgba(166,186,184,.5)", margin: 0 }}>
             v{VERSION} · Play Store listing coming soon
